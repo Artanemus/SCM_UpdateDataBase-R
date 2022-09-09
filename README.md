@@ -1,12 +1,11 @@
 # SCM_UpdateDataBase-RELEASE
-SwimClubMeet (SCM) UpdateDataBase Release
 
-![Hero UpdateDataBase ICON](ASSETS/SCM_AutoBuild_100x100.bmp)
+![Hero UpdateDataBase ICON](ASSETS/SCM_Icons_AutoBuild.png)
 
-### UpdateDataBase.exe (UDS) is an application that modifies the SwimClubMeet database in MS SQLEXPRESS to version-up.
+### SCM_UpdateDataBase.exe (UPDB) is an application that modifies the SwimClubMeet database in MS SQLEXPRESS to version-up.
 
 ---
-UDS is a 64bit application written in pascal. It's part of an eco system of applications that make up the SwimClubMeet project. SCM lets amateur swimming clubs manage members and run their club night's.
+UPDB is a 64bit application written in pascal. It's part of an eco system of applications that make up the SwimClubMeet project. SCM lets amateur swimming clubs manage members and run their club night's.
 
 ![The eco system of SCM](ASSETS/SCM_GroupOfIcons.png)
 
@@ -18,30 +17,32 @@ If you are interested in following a developer's blog and track my progress then
 
 ---
 
-### USING UDS
+### USING SCM_UpdateDataBase
 
-After install, by default an icon isn't placed on the desktop. Type **build** in the windows search bar to discover it. Else navigate to the **Artanemus** folder on the start bar. (All SCM applications and utilities are located in this folder.)
+After install, (by default) an icon isn't placed on the desktop. This is a service application and has no excuse to clutter up your desktop. Type **updateD** in the windows search bar to discover it. Else navigate to the **Artanemus** folder on the start bar. (All SCM applications and utilities are located in this folder.)
 
 ### ON START-UP
 
-The 'Build Me A Club' button will not be visible until a connection to the database server has been established. BMAC requires the SQL command utility, sqlcmd.exe. If you are using this application to create the database on a remote database server, then sqlcmd.exe must be correctly pathed.
+>**ALWAYS** make a backup of your database before running this utility!
 
-> Typically sqlcmd.exe is installed by default when you install MS SQLEXPRESS.
+The 'Update DataBase' button will not be visible until a connection to the database server has been established. UPDB requires the SQL command utility, sqlcmd.exe. If you are using this application to update the database on a remote database server, then sqlcmd.exe must be correctly pathed.
 
-BMAC will not overwrite an existing SwimClubMeet database.
+>After connecting the application displays the current SCM database version you are running.
 
-You would only ever need to run this application once. After a successful build the application can be removed. (Hence the reason, 'no icon on the desktop'😃)
+After clicking the UpdateDataBase button you are prompted to select a folder.
 
-> Use Windows **Apps and Features** to remove the application.
+You must provide it with the folder containing the update scripts. The scripts are provided to you by developer. Delivery of these scripts is via email. Make sure your are on the developers mailing list!
+
+> **IMPORTANT** The scripts must match/synchronize to the SwimClubMeet database your are currently using.
+
+After selecting the folder you are prompted to confirm that you wish to update.
 
 ### ERRORS?
 
-Any errors created by sqlcmd.exe are displayed in BMAC's text window.
+Any errors created by sqlcmd.exe are displayed in UPDB's text window.
 
-A server side log file is also produced. This will be located in your documents folder with the filename **SCM_BuildMeAClub.log**. View this file should an error occur.
-
-> The log file is not removed on uninstall. This is intentional.
+A server side log file is also produced. This will be located in your documents folder with the filename **SCM_UpdateDataBase.log**. View this file should an error occur.
 
 ---
 
-![ScreenShot of BMAC after logging in.](ASSETS/BuildMeAClub%20Screenshot%202022-09-08%20090322.JPG)
+![ScreenShot of BMAC after logging in.](ASSETS/Screenshot%202022-09-09%20111933.JPG)
