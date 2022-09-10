@@ -45,4 +45,4 @@ A server side log file is also produced. This will be located in your documents 
 
 ---
 
-![ScreenShot of BMAC after logging in.](ASSETS/Screenshot%202022-09-09%20111933.JPG)
+![ScreenShot of UPDB after logging in.](ASSETS/Screenshot%202022-09-09%20111933.JPG)
