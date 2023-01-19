@@ -22,3 +22,5 @@ SET IsActive = CASE
 WHERE IsArchived IS NULL
       OR IsActive IS NULL
       OR IsSwimmer IS NULL
+
+;

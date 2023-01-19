@@ -1,19 +1,19 @@
 USE [SwimClubMeet]
-GO
+go
 
 /****** Object:  UserDefinedFunction [dbo].[IsMemberNominated]    Script Date: 25/05/22 2:43:02 PM ******/
 SET ANSI_NULLS ON
-GO
+go
 
 SET QUOTED_IDENTIFIER ON
-GO
+go
 
 -- =============================================
 -- Author:		Ben Ambrose
 -- Create date: 25/05/2022
 -- Description:	Is the member nominated for the event
 -- =============================================
-CREATE OR ALTER FUNCTION [dbo].[IsMemberNominated]
+ALTER FUNCTION [dbo].[IsMemberNominated]
 (
     -- Add the parameters for the function here
     @MemberID INT
