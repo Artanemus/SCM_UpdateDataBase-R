@@ -1,5 +1,5 @@
 UPDATE [SwimClubMeet].[dbo].[SCMSystem]
-SET [Major] = 6
-  , [Minor] = 0
+SET [Major] = 1
+  , [Minor] = 6
 WHERE SCMSystemID = 1
 ;
