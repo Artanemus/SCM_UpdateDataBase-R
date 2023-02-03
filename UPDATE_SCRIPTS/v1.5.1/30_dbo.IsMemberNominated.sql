@@ -13,7 +13,7 @@ go
 -- Create date: 25/05/2022
 -- Description:	Is the member nominated for the event
 -- =============================================
-ALTER FUNCTION [dbo].[IsMemberNominated]
+CREATE OR ALTER FUNCTION [dbo].[IsMemberNominated]
 (
     -- Add the parameters for the function here
     @MemberID INT

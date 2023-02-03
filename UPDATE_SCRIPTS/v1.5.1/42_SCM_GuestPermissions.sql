@@ -1,6 +1,9 @@
 USE SwimClubMeet
 GO
 
+--CREATE ROLE SCM_Guest AUTHORIZATION dbo
+--go
+
 GRANT SELECT ON dbo.HeatStatus TO SCM_Guest
 go
 GRANT SELECT ON dbo.MembershipType TO SCM_Guest
@@ -57,8 +60,6 @@ GRANT SELECT ON dbo.ScorePoints TO SCM_Guest
 go
 GRANT SELECT ON dbo.House TO SCM_Guest
 go
-GRANT EXECUTE ON dbo.ABSMemberEventPlace TO SCM_Guest
-go
 GRANT EXECUTE ON dbo.RaceTimeDIFF TO SCM_Guest
 go
 GRANT EXECUTE ON dbo.SwimmerAge TO SCM_Guest
@@ -96,5 +97,13 @@ go
 GRANT EXECUTE ON dbo.RELHeatPlace TO SCM_Guest
 go
 GRANT EXECUTE ON dbo.ABSEventPlace TO SCM_Guest
+go
+GRANT EXECUTE ON dbo.TimeToBeat_DEFAULT TO SCM_Guest
+go
+GRANT EXECUTE ON dbo.IsMemberNominated TO SCM_Guest
+go
+GRANT EXECUTE ON dbo.IsMemberQualified TO SCM_Guest
+go
+GRANT EXECUTE ON dbo.EntrantScore TO SCM_Guest
 go
 

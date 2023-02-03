@@ -162,8 +162,6 @@ GRANT SELECT ON dbo.House TO SCM_Administrator
 go
 GRANT UPDATE ON dbo.House TO SCM_Administrator
 go
-GRANT EXECUTE ON dbo.ABSMemberEventPlace TO SCM_Administrator
-go
 GRANT EXECUTE ON dbo.RaceTimeDIFF TO SCM_Administrator
 go
 GRANT EXECUTE ON dbo.SwimmerAge TO SCM_Administrator
@@ -204,4 +202,12 @@ GRANT EXECUTE ON dbo.ABSEventPlace TO SCM_Administrator
 go
 GRANT EXECUTE ON dbo.TimeToBeat_DEFAULT TO SCM_Administrator
 go
+GRANT EXECUTE ON dbo.IsMemberNominated TO SCM_Administrator
+go
+GRANT EXECUTE ON dbo.IsMemberQualified TO SCM_Administrator
+go
+GRANT EXECUTE ON dbo.EntrantScore TO SCM_Administrator
+go
+
+
 

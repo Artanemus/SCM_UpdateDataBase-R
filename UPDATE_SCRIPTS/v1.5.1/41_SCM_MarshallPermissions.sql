@@ -1,6 +1,9 @@
 USE SwimClubMeet
 GO
 
+--CREATE ROLE SCM_Marshall AUTHORIZATION dbo
+--go
+
 GRANT SELECT ON dbo.HeatStatus TO SCM_Marshall
 go
 GRANT SELECT ON dbo.MembershipType TO SCM_Marshall
@@ -87,8 +90,6 @@ GRANT SELECT ON dbo.ScorePoints TO SCM_Marshall
 go
 GRANT SELECT ON dbo.House TO SCM_Marshall
 go
-GRANT EXECUTE ON dbo.ABSMemberEventPlace TO SCM_Marshall
-go
 GRANT EXECUTE ON dbo.RaceTimeDIFF TO SCM_Marshall
 go
 GRANT EXECUTE ON dbo.SwimmerAge TO SCM_Marshall
@@ -126,5 +127,13 @@ go
 GRANT EXECUTE ON dbo.RELHeatPlace TO SCM_Marshall
 go
 GRANT EXECUTE ON dbo.ABSEventPlace TO SCM_Marshall
+go
+GRANT EXECUTE ON dbo.TimeToBeat_DEFAULT TO SCM_Marshall
+go
+GRANT EXECUTE ON dbo.IsMemberNominated TO SCM_Marshall
+go
+GRANT EXECUTE ON dbo.IsMemberQualified TO SCM_Marshall
+go
+GRANT EXECUTE ON dbo.EntrantScore TO SCM_Marshall
 go
 
