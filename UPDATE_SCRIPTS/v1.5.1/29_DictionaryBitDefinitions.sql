@@ -9,8 +9,4 @@ GO
 CREATE DEFAULT dbo.BIT_0 AS 0
 GO
 
--- Standard Alter Table SQL
-ALTER TABLE dbo.Member ADD IsSwimmer BIT NULL
-GO
-
 

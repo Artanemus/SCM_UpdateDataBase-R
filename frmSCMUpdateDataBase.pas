@@ -11,7 +11,8 @@ uses
   FireDAC.Phys, FireDAC.VCLUI.Wait, Data.DB, FireDAC.Comp.Client,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, Vcl.ComCtrls,
-  System.Actions, Vcl.ActnList;
+  System.Actions, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.VirtualImage;
 
 type
   TSCMUpdateDataBase = class(TForm)
@@ -42,6 +43,8 @@ type
     edtUser: TEdit;
     Panel4: TPanel;
     qryDBExists: TFDQuery;
+    VirtualImage1: TVirtualImage;
+    ImageCollection1: TImageCollection;
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -74,6 +77,7 @@ type
       RunMinimized: Boolean = false; Log: Boolean = false): Boolean;
 
     function CheckVersionControl(var SQLPath: string): Boolean;
+    function CheckVersion(): Boolean;
 
     procedure GetFileList(filePath, fileMask: String; var sl: TStringList);
     procedure GetSCM_DB_Version(var DBVersion, Major, Minor: Integer);
@@ -84,6 +88,8 @@ type
     procedure SimpleSaveSettingString(Section, Name, Value: String);
     procedure SimpleMakeTemporyFDConnection(Server, User, Password: String;
       OsAuthent: Boolean);
+
+    procedure ExecuteProcessScripts(var SQLPath: string);
 
   public
     { Public declarations }
@@ -96,7 +102,7 @@ const
   logOutFn = '\Documents\SCM_UpdateDataBase.log';
   SectionName = 'SCM_UpdateDataBase';
   logOutFnTmp = '\Documents\SCM_UpdateDataBase.tmp';
-
+  defUpdateScriptsPath = 'UPDATE_SCRIPTS\v1.5.1\';
 implementation
 
 uses System.IOUtils, System.Types, System.IniFiles,
@@ -149,6 +155,112 @@ begin
     CloseHandle(hProcess);
     // CHECK :: CloseHandle(hThread); was originally placed here in C++ ...
   end;
+end;
+
+procedure TSCMUpdateDataBase.ExecuteProcessScripts(var SQLPath: string);
+var
+sl: TStringList;
+s, Str, fp, fn: String;
+mr: TModalResult;
+errCount, errCode: integer;
+success: boolean;
+begin
+  // Look for SQL file to execute ...
+  sl := TStringList.Create;
+  GetFileList(FSQLPath, '*.SQL', sl);
+  sl.Sort; // Perform an ANSI sort
+
+  // Are there SQL files in this directory?
+  if sl.Count = 0 then
+  begin
+    s := 'No build scripts to run!' + sLineBreak + 'READY ...';
+    MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
+    // update button remains visible - try again ....
+    btnUDB.Visible := true;
+    FreeAndNil(sl);
+    Memo1.Lines.Add(s);
+    exit;
+  end;
+
+  // Final message before running update
+  s := 'Found ' + IntToStr(sl.Count) + ' scripts to run.' + sLineBreak +
+    'Select yes to update your swimming club database.';
+  mr := MessageDlg(s, TMsgDlgType.mtConfirmation, [mbNo, mbYes], 0);
+
+  Memo1.Lines.Add('Found ' + IntToStr(sl.Count) + ' scripts to run.');
+  if mr = mrYes then
+  begin
+    progressBar.Visible := true;
+    progressBar.Max := sl.Count;
+    errCount := 0;
+    // echo message in memopad
+    Memo1.Lines.Add('Found ' + IntToStr(sl.Count) + ' scripts to run.');
+    Str := GetEnvironmentVariable('USERPROFILE') + logOutFn;
+    Memo1.Lines.Add('Sending log to ' + Str + sLineBreak);
+
+    // clear the log file
+    if FileExists(Str) then
+      DeleteFile(Str);
+
+    for fp in sl do
+    begin
+      // get filename ...
+      fn := ExtractFileName(fp);
+      // display the info and break
+      Memo1.Lines.Add(fn);
+
+      // *******************************************************************
+      // SQL file, servername, rtn errCode, run silent, create log file ...
+      // -------------------------------------------------------------------
+      success := ExecuteProcessSQLcmd(fp, edtServerName.Text, edtUser.Text,
+        edtPassword.Text, errCode, chkbUseOSAuthentication.Checked, true, true);
+      // *******************************************************************
+
+      if not success then
+      begin
+        errCount := errCount + 1;
+        Memo1.Lines.Add('Error: ' + IntToStr(errCode) + fn);
+      end;
+
+      progressBar.Position := progressBar.Position + 1;
+    end;
+    Memo1.Lines.Add(sLineBreak + 'FINISHED');
+    if errCount = 0 then
+    begin
+      Memo1.Lines.Add('ExecuteProcess completed without errors.' + sLineBreak);
+      Memo1.Lines.Add
+        ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.'
+        + sLineBreak);
+      // * Version number of SwimClubMeet DataBase *
+      // Only read this table if not errors reported.
+      GetSCM_DB_Version(FDBVersion, FDBMajor, FDBMinor);
+      s := 'SwimClubMeet database build info ... Version: ' +
+        IntToStr(FDBVersion) + '.' + IntToStr(FDBMajor) + '.' +
+        IntToStr(FDBMinor);
+      Memo1.Lines.Add(s);
+    end
+    else
+    begin
+      Memo1.Lines.Add('ExecuteProcess reported: ' + IntToStr(errCount) +
+        ' errors.' + sLineBreak);
+      Memo1.Lines.Add('View the SCM_UpdateDataBase.log for sqlcmd.exe errors.' +
+        sLineBreak);
+    end;
+    // only one shot at building granted
+    btnUDB.Visible := false;
+    BuildDone := true;
+    progressBar.Visible := false;
+
+    // finished with database - do a disconnect? (But it hides the Memo1 cntrl)
+    Memo1.Lines.Add(sLineBreak +
+      'UpdateDataBase has completed. Press EXIT when ready.');
+  end
+  else
+    // we had scripts ... but user didn't do a build
+    btnUDB.Visible := true;
+
+  FreeAndNil(sl);
+
 end;
 
 function TSCMUpdateDataBase.ExecuteProcessSQLcmd(SQLFile, ServerName, UserName,
@@ -305,7 +417,7 @@ begin
   if scmConnection.Connected then
   begin
     // opening and closing a query performs a full refresh.
-    if qryVersion.Active then qryVersion.Close;
+    qryVersion.Close;
     qryVersion.Open;
     if qryVersion.Active then
     begin
@@ -437,6 +549,13 @@ begin
     SaveConfigData;
 end;
 
+function TSCMUpdateDataBase.CheckVersion: Boolean;
+begin
+  Result := false;
+  if (FDBVersion = 1) AND (FDBMajor = 5) AND (FDBMinor = 0) then
+    Result := true;
+end;
+
 function TSCMUpdateDataBase.CheckVersionControl(var SQLPath: string): Boolean;
 var
   s, s2: string;
@@ -452,6 +571,8 @@ begin
 
   if FDBVersion > 0 then
   begin
+
+    // in this build - version control should read 1,1,5,1
 
     s := SQLPath + 'SCM_VersionControl.txt';
     s2 := '';
@@ -507,6 +628,7 @@ begin
         else if Major > FDBMajor then
           Result := true;
       end;
+
       FreeAndNil(slv);
     end;
   end;
@@ -629,8 +751,7 @@ end;
 
 procedure TSCMUpdateDataBase.actnUDBExecute(Sender: TObject);
 var
-  sl: TStringList;
-  s, Str, fp, fn, FDir: String;
+  s, FDir: String;
   errCount, errCode: Integer;
   mr: TModalResult;
   success: Boolean;
@@ -684,6 +805,41 @@ begin
     exit;
   end;
 
+  FSQLPath := ExtractFilePath(Application.ExeName) + defUpdateScriptsPath;
+  if TDirectory.Exists(FSQLPath) then
+  begin
+    s := 'The default folder ' + defUpdateScriptsPath + ' was found.' +
+      sLineBreak + 'Select yes to continue or no to locate another folder.';
+    mr := MessageDlg(s, TMsgDlgType.mtConfirmation, [mbNo, mbYes], 0, mbYes);
+    Memo1.Lines.Add('Running ' + defUpdateScriptsPath);
+    if (mr = mrYes) then
+    begin
+      if CheckVersion then
+      begin
+        ExecuteProcessScripts(FSQLPath);
+        s := 'Press EXIT when ready.';
+      end
+      else
+      begin
+        // wanted version 1,1,5,0
+        s := 'The current version of the database cant''t be' + sLineBreak +
+          'updated with the supplied SQL scripts.' + sLineBreak +
+          'Press EXIT when ready.';
+        MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
+      end;
+
+      btnUDB.Visible := false;
+      BuildDone := true;
+      Memo1.Lines.Add(s);
+      exit;
+
+    end;
+  end;
+
+  // ----------------------------------------------------------------
+  // LET THE USER LOCATE A FOLDER WITH SQL SCRIPTS
+  // AND VERSION CONTROL TEXT FILE
+  // ----------------------------------------------------------------
   // DEFAULT STARTING DIRECTORY
   FDir := GetEnvironmentVariable('USERPROFILE') + '\Documents\';
   FSQLPath := '';
@@ -723,13 +879,13 @@ begin
   if not success then
   begin
     // Final message before running update
-    s := 'Mismatch with current database version and update.' + sLineBreak +
+    s := 'Mismatch with current database and version control.' + sLineBreak +
       'Select yes to continue with your swimming club database update' +
       sLineBreak + 'or select no to ABORT.';
-    mr := MessageDlg(s, TMsgDlgType.mtConfirmation, [mbNo, mbYes], 0);
+    mr := MessageDlg(s, TMsgDlgType.mtConfirmation, [mbNo, mbYes], 0, mbNo);
     if mr = mrNo then
     begin
-      Memo1.Lines.Add('Mismatch with current database version and update.');
+      Memo1.Lines.Add('Mismatch with version control.');
       Memo1.Lines.Add('Version control failed.' + sLineBreak);
       Memo1.Lines.Add('READY ...');
       // user still permitted to update ...
@@ -738,101 +894,7 @@ begin
     end;
   end;
 
-  // Look for SQL file to execute ...
-  sl := TStringList.Create;
-  GetFileList(FSQLPath, '*.SQL', sl);
-  sl.Sort; // Perform an ANSI sort
-
-  // Are there SQL files in this directory?
-  if sl.Count = 0 then
-  begin
-    s := 'No build scripts to run!' + sLineBreak + 'READY ...';
-    MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
-    // update button remains visible - try again ....
-    btnUDB.Visible := true;
-    FreeAndNil(sl);
-    Memo1.Lines.Add(s);
-    exit;
-  end;
-
-  // Final message before running update
-  s := 'Found ' + IntToStr(sl.Count) + ' scripts to run.' + sLineBreak +
-    'Select yes to update your swimming club database.';
-  mr := MessageDlg(s, TMsgDlgType.mtConfirmation, [mbNo, mbYes], 0);
-
-  Memo1.Lines.Add('Found ' + IntToStr(sl.Count) + ' scripts to run.');
-  if mr = mrYes then
-  begin
-    progressBar.Visible := true;
-    progressBar.Max := sl.Count;
-    errCount := 0;
-    // echo message in memopad
-    Memo1.Lines.Add('Found ' + IntToStr(sl.Count) + ' scripts to run.');
-    Str := GetEnvironmentVariable('USERPROFILE') + logOutFn;
-    Memo1.Lines.Add('Sending log to ' + Str + sLineBreak);
-
-    // clear the log file
-    if FileExists(Str) then
-      DeleteFile(Str);
-
-    for fp in sl do
-    begin
-      // get filename ...
-      fn := ExtractFileName(fp);
-      // display the info and break
-      Memo1.Lines.Add(fn);
-
-      // *******************************************************************
-      // SQL file, servername, rtn errCode, run silent, create log file ...
-      // -------------------------------------------------------------------
-      success := ExecuteProcessSQLcmd(fp, edtServerName.Text, edtUser.Text,
-        edtPassword.Text, errCode, chkbUseOSAuthentication.Checked, true, true);
-      // *******************************************************************
-
-      if not success then
-      begin
-        errCount := errCount + 1;
-        Memo1.Lines.Add('Error: ' + IntToStr(errCode) + fn);
-      end;
-
-      progressBar.Position := progressBar.Position + 1;
-    end;
-    Memo1.Lines.Add(sLineBreak + 'FINISHED');
-    if errCount = 0 then
-    begin
-      Memo1.Lines.Add('ExecuteProcess completed without errors.' + sLineBreak);
-      Memo1.Lines.Add
-        ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.'
-        + sLineBreak);
-      // * Version number of SwimClubMeet DataBase *
-      // Only read this table if not errors reported.
-      GetSCM_DB_Version(FDBVersion, FDBMajor, FDBMinor);
-      s := 'SwimClubMeet database build info ... Version: ' +
-        IntToStr(FDBVersion) + '.' + IntToStr(FDBMajor) + '.' +
-        IntToStr(FDBMinor);
-      Memo1.Lines.Add(s);
-    end
-    else
-    begin
-      Memo1.Lines.Add('ExecuteProcess reported: ' + IntToStr(errCount) +
-        ' errors.' + sLineBreak);
-      Memo1.Lines.Add('View the SCM_UpdateDataBase.log for sqlcmd.exe errors.' +
-        sLineBreak);
-    end;
-    // only one shot at building granted
-    btnUDB.Visible := false;
-    BuildDone := true;
-    progressBar.Visible := false;
-
-    // finished with database - do a disconnect? (But it hides the Memo1 cntrl)
-    Memo1.Lines.Add(sLineBreak +
-      'UpdateDataBase has completed. Press EXIT when ready.');
-  end
-  else
-    // we had scripts ... but user didn't do a build
-    btnUDB.Visible := true;
-
-  FreeAndNil(sl);
+  ExecuteProcessScripts(FSQLPath);
   Memo1.Lines.Add('READY ...');
 
 end;
