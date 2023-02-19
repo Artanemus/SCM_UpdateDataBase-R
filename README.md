@@ -25,24 +25,60 @@ After install, (by default) an icon isn't placed on the desktop. This is a servi
 
 >**ALWAYS** make a backup of your database before running this utility!
 
-The 'Update DataBase' button will not be visible until a connection to the database server has been established. UPDB requires the SQL command utility, sqlcmd.exe. If you are using this application to update the database on a remote database server, then sqlcmd.exe must be correctly pathed.
+The `Update DataBase` button will not be visible until a connection to the database server has been established. UPDB requires the SQL command utility, sqlcmd.exe. If you are using this application to update the database on a remote database server, then sqlcmd.exe must be correctly pathed.
 
->After connecting the application displays the current SCM database version you are running.
-
-After clicking the UpdateDataBase button you are prompted to select a folder.
-
-You must provide it with the folder containing the update scripts. The scripts are provided to you by developer. Delivery of these scripts is via email. Make sure your are on the developers mailing list!
-
-> **IMPORTANT** The scripts must match/synchronize to the SwimClubMeet database your are currently using.
-
-After selecting the folder you are prompted to confirm that you wish to update.
+After clicking the UpdateDataBase button you are prompted to confirm. Press `Yes`.
 
 ### ERRORS?
 
-Any errors created by sqlcmd.exe are displayed in UPDB's text window.
-
-A server side log file is also produced. This will be located in your documents folder with the filename **SCM_UpdateDataBase.log**. View this file should an error occur.
+The application's memo-pad displays progress and any errors. Additionally, check the log file for MS SQLEXPRESS errors. This can be found at `%USERPROFILE%\Documents\SCM_UpdateDataBase.log`.
 
 ---
 
-![ScreenShot of UPDB after logging in.](ASSETS/Screenshot%202022-09-09%20111933.JPG)
+![ScreenShot of UPDB after logging in.](ASSETS/Screenshot%202022-09-09%20113118.JPG)
+
+---
+
+## SCM UpdateDataBase_64bit_v1.5.1.0.exe 2023/02/23
+
+For users running database SCMSystem values: (1,1,5,0).
+
+> It takes your (1,1,5,0) database and turns it into (1,1,5,1)
+
+Any of these core application versions can run on this database.
+
+- SCM_SwimClubMeet_32bit_v1.5.4.0
+- SCM_SwimClubMeet_32bit_v1.5.3.0
+- SCM_SwimClubMeet_x32_v1.5.2.0
+- SCM_SwimClubMeet_x32_v1.5.1.0
+
+Notes on this update.
+
+- Fixes scalar function. `dbo.IsMemberNominated.UserDefinedFunction.sql`.
+- New field: `SwimClubMeet.dbo.Member.IsSwimmer` (BIT).
+- Sets DEFAULT on fields `IsArchived`, `IsActive` and `IsSwimmer` in SwimClubMeet.dbo.Member.
+- Re-index (changed field orders) in table `dbo.Member`. 
+- Repairs default values for fields IsArchived and IsActive on existing records in SwimClubMeet.dbo.Member. (If they read NULL.)
+- Updates SCMSystem values to: (1,1,5,1).
+
+Special note:
+
+After the update a temporary table with the name `Member_` followed by a large hash number will appear in the database. After testing, you may remove this table. It's also safe to leave it.
+
+---
+
+## SCM UpdateDataBase_x64_v1.1.0.0.exe 09/09/2022
+
+***Who should use this update?***
+
+>For use ONLY by early adopters of the SCM project.
+
+If you created your database by using SCM_BuildMeAClub_x64_v1.1.0.0 then you ***DON'T*** need this update! 😃.
+
+Notes on this update.
+
+- Takes a very old 1.0.0.0 version and bring it up to date.
+- It requires delivery of SQL scripts from the developer!
+- Updates SCMSystem values to: (1,1,5,0)
+
+---

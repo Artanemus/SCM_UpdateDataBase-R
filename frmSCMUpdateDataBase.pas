@@ -87,7 +87,6 @@ type
     FDBVerCtrlStr: string;
     FDBVerCtrlStrVerbose: string;
 
-
     FSQLPath: String;
     fBuildUpdateScriptPath: String;
 
@@ -281,7 +280,6 @@ begin
     btnUDB.Visible := false;
     BuildDone := true;
     progressBar.Visible := false;
-
 
     // finished with database - do a disconnect? (But it hides the Memo1 cntrl)
     Memo1.Lines.Add(sLineBreak +
@@ -669,8 +667,8 @@ begin
       Memo1.Lines.Add('Version control reported: ' + s2);
 
       // VALIDATE update database values
-      if (Base = OUT_Model) AND (version = OUT_Version) AND (Major = OUT_Major) AND
-        (Minor = OUT_Minor) then
+      if (Base = OUT_Model) AND (version = OUT_Version) AND (Major = OUT_Major)
+        AND (Minor = OUT_Minor) then
       begin
         Result := true;
         vimgPassed2.ImageIndex := 1; // YELLOW CHECK MARK
@@ -708,8 +706,8 @@ end;
 
 function TSCMUpdateDataBase.BuildUpdateScriptPath: String;
 begin
-  Result := defUpdateScriptsRootPath + 'v' + IntToStr(OUT_Model) + '.'
-    + IntToStr(OUT_Version) + '.' + IntToStr(OUT_Major) + '.' +
+  Result := defUpdateScriptsRootPath + 'v' + IntToStr(OUT_Model) + '.' +
+    IntToStr(OUT_Version) + '.' + IntToStr(OUT_Major) + '.' +
     IntToStr(OUT_Minor) + '\';
 end;
 
@@ -743,7 +741,8 @@ begin
     GetSCM_DB_Version;
 
     // DISPLAYS A BRIGHT GREEN CHECKBOX
-    if (FDBModel = 1) AND (FDBVersion = 1) AND (FDBMajor = 5) AND (FDBMinor = 0) then
+    if (FDBModel = 1) AND (FDBVersion = 1) AND (FDBMajor = 5) AND (FDBMinor = 0)
+    then
       vimgPassed.Visible := true
     else
       vimgPassed.Visible := false;
