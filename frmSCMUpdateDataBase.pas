@@ -88,7 +88,7 @@ type
     FDBVerCtrlStrVerbose: string;
 
     FSQLPath: String;
-    fBuildUpdateScriptPath: String;
+    fUpdateScriptSubPath: String;
 
     // Flags that building is finalised or can't proceed.
     // Once set - btnUDB is not long visible. User may only exit.
@@ -105,7 +105,7 @@ type
     function CheckVersionControlText(var SQLPath: string): Boolean;
     function CheckSCMSystemVersion(): Boolean;
 
-    function BuildUpdateScriptPath(): String;
+    function BuildUpdateScriptSubPath(): String;
 
     procedure GetFileList(filePath, fileMask: String; var sl: TStringList);
     procedure GetSCM_DB_Version();
@@ -415,7 +415,7 @@ begin
   vimgPassed.Visible := false;
   vimgPassed2.Visible := false;
 
-  fBuildUpdateScriptPath := BuildUpdateScriptPath;
+  fUpdateScriptSubPath := BuildUpdateScriptSubPath;
 
 end;
 
@@ -704,7 +704,7 @@ begin
   Close;
 end;
 
-function TSCMUpdateDataBase.BuildUpdateScriptPath: String;
+function TSCMUpdateDataBase.BuildUpdateScriptSubPath: String;
 begin
   Result := defUpdateScriptsRootPath + 'v' + IntToStr(OUT_Model) + '.' +
     IntToStr(OUT_Version) + '.' + IntToStr(OUT_Major) + '.' +
@@ -950,11 +950,11 @@ begin
       fBuildUpdateScriptPath;
 {$ELSE}
     // up to and including the colon or backslash .... SAFE
-    FSQLPath := ExtractFilePath(Application.ExeName) + fBuildUpdateScriptPath;
+    FSQLPath := ExtractFilePath(Application.ExeName) + fUpdateScriptSubPath;
 {$IFEND}
     if not TDirectory.Exists(FSQLPath) then
     begin
-      s := 'The update folder ' + fBuildUpdateScriptPath + ' wasn''t found.';
+      s := 'The update folder ' + fUpdateScriptSubPath + ' wasn''t found.';
       MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0, mbOk);
       // single shot at building
       btnUDB.Visible := false;
