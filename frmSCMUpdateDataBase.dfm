@@ -12768,10 +12768,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     FFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000000000000000
     0000000000000000000000000000000000000000000000000000000000000000
     0000000000000000000000000000}
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 21
   object Panel1: TPanel
     Left = 0
@@ -12781,6 +12779,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 706
     object VirtualImage1: TVirtualImage
       Left = 442
       Top = 72
@@ -12909,6 +12908,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       BevelKind = bkTile
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 706
       object Image2: TImage
         Left = 16
         Top = 12
@@ -15602,6 +15602,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 706
+    ExplicitHeight = 357
     object Memo1: TMemo
       AlignWithMargins = True
       Left = 10
@@ -15616,9 +15618,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
         
           'SCM_UpdateDataBase.exe updates your SwimClubMeet database in MS ' +
           'SQL.'
-        
-          'You must provide it with the folder containing the update script' +
-          's.'
         ''
         
           'The '#39#39'Update DataBase'#39#39' button will not be visible until a conne' +
@@ -15634,6 +15633,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
           '). ')
       ScrollBars = ssVertical
       TabOrder = 0
+      ExplicitWidth = 686
+      ExplicitHeight = 314
     end
     object progressBar: TProgressBar
       AlignWithMargins = True
@@ -15646,6 +15647,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Margins.Right = 10
       Align = alTop
       TabOrder = 1
+      ExplicitWidth = 686
     end
   end
   object Panel3: TPanel
@@ -15658,6 +15660,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     BevelKind = bkSoft
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 726
+    ExplicitWidth = 706
     object btnUDB: TButton
       Left = 181
       Top = 8
