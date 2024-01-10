@@ -15602,8 +15602,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 706
-    ExplicitHeight = 357
     object Memo1: TMemo
       AlignWithMargins = True
       Left = 10
@@ -15616,21 +15614,22 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Align = alClient
       Lines.Strings = (
         
-          'SCM_UpdateDataBase.exe updates your SwimClubMeet database in MS ' +
-          'SQL.'
+          'SCM_UpdateDataBase.exe updates your SwimClubMeet database on the' +
+          ' MS SQLEXPRESS server.'
         ''
         
-          'The '#39#39'Update DataBase'#39#39' button will not be visible until a conne' +
-          'ction to the DB Server is '
+          'The '#39#39'Update DataBase'#39#39' button will not be VISIBLE until a conne' +
+          'ction to the DB Server is'
         'established.'
+        ''
+        
+          'The '#39'Update DataBase'#39#39' button will not be ENABLED until an updat' +
+          'e script folder is selected.'
         ''
         
           'ALWAYS make a backup of your database before running this utilit' +
           'y!'
-        ''
-        
-          'Your starting SwimClubMeet.dbo.SCMSystem values must be (1,1,5,0' +
-          '). ')
+        '')
       ScrollBars = ssVertical
       TabOrder = 0
       ExplicitWidth = 686
@@ -15663,22 +15662,31 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     ExplicitTop = 726
     ExplicitWidth = 706
     object btnUDB: TButton
-      Left = 181
-      Top = 8
-      Width = 255
+      Left = 312
+      Top = 7
+      Width = 167
       Height = 36
       Action = actnUDB
       TabOrder = 0
     end
     object btnCancel: TButton
-      Left = 442
-      Top = 8
+      Left = 493
+      Top = 7
       Width = 91
       Height = 36
       Caption = 'Exit'
       ModalResult = 2
       TabOrder = 1
       OnClick = btnCancelClick
+    end
+    object Button1: TButton
+      Left = 131
+      Top = 7
+      Width = 167
+      Height = 36
+      Action = actnUDB
+      Caption = 'Select Folder'
+      TabOrder = 2
     end
   end
   object scmConnection: TFDConnection
@@ -15714,6 +15722,9 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Caption = 'Update DataBase'
       OnExecute = actnUDBExecute
       OnUpdate = actnUDBUpdate
+    end
+    object actnSelect: TAction
+      Caption = 'Select Folder'
     end
   end
   object qryDBExists: TFDQuery

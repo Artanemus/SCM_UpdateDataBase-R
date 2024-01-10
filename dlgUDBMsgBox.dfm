@@ -12766,9 +12766,7 @@ object UDBMsgBox: TUDBMsgBox
     FFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000000000000000000
     0000000000000000000000000000000000000000000000000000000000000000
     0000000000000000000000000000}
-  OldCreateOrder = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 19
   object Label1: TLabel
     Left = 135
@@ -14044,22 +14042,16 @@ object UDBMsgBox: TUDBMsgBox
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFF}
   end
-  object Shape1: TShape
-    Left = 8
-    Top = 112
-    Width = 457
-    Height = 6
-    Brush.Color = clAppWorkSpace
-  end
   object Panel1: TPanel
     Left = 0
     Top = 151
     Width = 497
     Height = 51
     Align = alBottom
+    BevelEdges = [beTop]
+    BevelKind = bkFlat
+    BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 237
-    ExplicitWidth = 402
     object btnCancel: TButton
       Left = 163
       Top = 8

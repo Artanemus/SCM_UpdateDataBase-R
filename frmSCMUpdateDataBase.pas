@@ -47,6 +47,8 @@ type
     ImageCollection1: TImageCollection;
     vimgPassed: TVirtualImage;
     vimgPassed2: TVirtualImage;
+    Button1: TButton;
+    actnSelect: TAction;
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);

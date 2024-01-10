@@ -14,7 +14,6 @@ type
     Label1: TLabel;
     Label2: TLabel;
     Image1: TImage;
-    Shape1: TShape;
     procedure btnCancelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
