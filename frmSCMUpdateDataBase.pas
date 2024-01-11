@@ -12,7 +12,7 @@ uses
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, Vcl.ComCtrls,
   System.Actions, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImage;
+  Vcl.VirtualImage, dlgSelectUpdateFolder, UDBConfig, System.Generics.Collections;
 
 type
   TSCMUpdateDataBase = class(TForm)
@@ -47,13 +47,18 @@ type
     ImageCollection1: TImageCollection;
     vimgPassed: TVirtualImage;
     vimgPassed2: TVirtualImage;
-    Button1: TButton;
+    btnSelectFolder: TButton;
     actnSelect: TAction;
+    lblOriginalDB: TLabel;
+    lblUpdatedDB: TLabel;
+    Label2: TLabel;
+    procedure FormDestroy(Sender: TObject);
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure actnDisconnectExecute(Sender: TObject);
     procedure actnDisconnectUpdate(Sender: TObject);
+    procedure actnSelectExecute(Sender: TObject);
     procedure actnUDBExecute(Sender: TObject);
     procedure actnUDBUpdate(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
@@ -95,6 +100,8 @@ type
 
     FSQLPath: String;
     fUpdateScriptSubPath: String;
+    UDBConfigList: TObjectList<TUDBConfig>;
+
 
     // Flags that building is finalised or can't proceed.
     // Once set - btnUDB is not long visible. User may only exit.
@@ -144,6 +151,11 @@ uses System.IOUtils, System.Types, System.IniFiles,
   System.UITypes, utilVersion;
 
 {$R *.dfm}
+
+procedure TSCMUpdateDataBase.FormDestroy(Sender: TObject);
+begin
+  UDBConfigList.Free;
+end;
 
 function TSCMUpdateDataBase.ExecuteProcess(const FileName, Params: string;
   Folder: string; WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
@@ -421,7 +433,9 @@ begin
   vimgPassed.Visible := false;
   vimgPassed2.Visible := false;
 
-  fUpdateScriptSubPath := BuildUpdateScriptSubPath;
+  fUpdateScriptSubPath := 'UDB_SCRIPTS\';
+
+  UDBConfigList := TObjectList<TUDBConfig>.Create(true);// owns object
 
 end;
 
@@ -805,6 +819,60 @@ begin
   end;
   if BuildDone then // only one build per application running
     btnUDB.Visible := false;
+end;
+
+procedure TSCMUpdateDataBase.actnSelectExecute(Sender: TObject);
+var
+  dlg: TSelectUpdateFolder;
+  rootDIR, s: string;
+begin
+  lblOriginalDB.Caption := 'version?';
+//  fScriptPath := '';
+  // DEFAULT:
+  // BUILDMEACLUB USES THE SUB-FOLDER WITHIN IT'S EXE PATH
+  // ---------------------------------------------------------------
+{$IFDEF DEBUG}
+  rootDIR := TPath.GetDocumentsPath + '\GitHub\SCM_ERStudio\' +
+    IncludeTrailingPathDelimiter(fUpdateScriptSubPath);
+{$ELSE}
+  // up to and including the colon or backslash .... SAFE
+  rootDIR := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName))
+    + IncludeTrailingPathDelimiter(fUpdateScriptSubPath);
+{$IFEND}
+
+  // DOES PATH EXISTS?
+  if not System.SysUtils.DirectoryExists(rootDIR, true) then
+  begin
+    s := 'The build scripts sub-folder is missing!' + sLineBreak +
+      '(Default name : ''#EXEPATH#\UDB_SCRIPTS\''.)' + sLineBreak +
+      'Cannot continue. Missing UDB system sub-folder.' + sLineBreak +
+      'Press EXIT when ready.';
+    MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
+    // only one shot at building granted
+    btnUDB.Visible := false;
+    BuildDone := true;
+    Memo1.Lines.Add(s);
+    exit;
+  end;
+
+  if Assigned(UDBConfigList) then
+  begin
+    dlg := TSelectUpdateFolder.Create(self);
+    dlg.UDBScriptsPath := rootDIR;
+    dlg.UDBConfigList := UDBConfigList;
+    dlg.ShowModal;
+    if not dlg.RtnSubFolder.IsEmpty then
+    begin
+      s := rootDIR + IncludeTrailingPathDelimiter(dlg.RtnSubFolder);
+      if System.SysUtils.DirectoryExists(s) then
+      begin
+  //      fScriptPath := s;
+  //      lblOriginalDB.Caption := dlg.RtnSubFolder;
+      end;
+    end;
+    dlg.Free;
+  end;
+
 end;
 
 procedure TSCMUpdateDataBase.actnUDBUpdate(Sender: TObject);

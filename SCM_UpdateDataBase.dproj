@@ -128,6 +128,7 @@
             <Form>SelectUpdateFolder</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="UDBConfig.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

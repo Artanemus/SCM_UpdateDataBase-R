@@ -4,7 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls,
+  UDBConfig, System.Generics.Collections;
 
 type
   TSelectUpdateFolder = class(TForm)
@@ -14,6 +15,7 @@ type
     btnCancel: TButton;
     btnOk: TButton;
     Panel3: TPanel;
+    procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
@@ -22,14 +24,17 @@ type
     { Private declarations }
     fUDBScriptsPath: string;
     fRtnSubFolder: string;
-    procedure InitCheckListBoxItems(const DIR: string);
+
+
+
+    procedure InitCheckListBoxItems(const DIR: string; ConfigList: TObjectList<TUDBConfig>);
     function GetCheckedItems(ListBox: TCheckListBox): string;
 
   public
     { Public declarations }
+    UDBConfigList: TObjectList<TUDBConfig>;
     property RtnSubFolder: string read fRtnSubFolder;
     property UDBScriptsPath: string write fUDBScriptsPath;
-
   end;
 
 var
@@ -44,7 +49,9 @@ uses
 
 procedure TSelectUpdateFolder.FormCreate(Sender: TObject);
 begin
-fRtnSubFolder := '';
+  fRtnSubFolder := '';
+//  UDBConfigList := TObjectList<TUDBConfig>.Create();
+//  UDBConfigList.OwnsObjects := true; // owns object
 end;
 
 procedure TSelectUpdateFolder.btnCancelClick(Sender: TObject);
@@ -66,7 +73,7 @@ begin
     ModalResult := mrCancel;
     Close;
   end;
-  InitCheckListBoxItems(fUDBScriptsPath);
+  InitCheckListBoxItems(fUDBScriptsPath, UDBConfigList);
 end;
 
 function TSelectUpdateFolder.GetCheckedItems(ListBox: TCheckListBox): string;
@@ -104,25 +111,6 @@ Mask := '*.ini';
   exit(False);
 end;
 
-procedure TSelectUpdateFolder.InitCheckListBoxItems(const DIR: string);
-var
-  Folders: TStringDynArray;
-  Files: TStringDynArray;
-  Folder: string;
-  LastFolder: string;
-  Predicate: TDirectory.TFilterPredicate;
-begin
-  Folders := TDirectory.GetDirectories(DIR);
-  CheckListBox1.Items.Clear;
-  for Folder in Folders do
-  begin
-    // get the files in the folder
-    Files := TDirectory.GetFiles(DIR, Predicate);
-    LastFolder := ExtractFileName(ExcludeTrailingPathDelimiter(Folder));
-    CheckListBox1.Items.Add(LowerCase(LastFolder));
-  end;
-end;
-
 
 function MyGetFiles(const Path, Masks: string): TStringDynArray;
 var
@@ -142,5 +130,53 @@ begin
     end;
   Result := TDirectory.GetFiles(Path, Predicate);
 end;
+
+procedure TSelectUpdateFolder.FormDestroy(Sender: TObject);
+begin
+//  UDBConfigList.free;
+end;
+
+procedure TSelectUpdateFolder.InitCheckListBoxItems(const DIR: string; ConfigList: TObjectList<TUDBConfig>);
+var
+  Folders: TStringDynArray;
+  Files: TStringDynArray;
+  aFile, s: string;
+  Folder: string;
+  LastFolder: string;
+  Predicate: TDirectory.TFilterPredicate;
+  Masks: String;
+  UDBConfig: TUDBConfig;
+begin
+  Folders := TDirectory.GetDirectories(DIR);
+  CheckListBox1.Items.Clear;
+  for Folder in Folders do
+  begin
+    // get the files in the folder
+    Masks := '*.ini';
+    Files := MyGetFiles(Folder, Masks);
+    for afile in Files do
+    begin
+      // should only be one ini file in the each directory
+      s := ExtractFileName(afile);
+      if (s = 'UDBConfig.ini') then
+      begin
+        UDBConfig := TUDBConfig.Create;
+        UDBConfig.LoadIniFile(aFile);
+        ConfigList.Add(UDBConfig); // owns object
+      end;
+    end;
+
+    // LastFolder := ExtractFileName(ExcludeTrailingPathDelimiter(Folder));
+    // CheckListBox1.Items.Add(LowerCase(LastFolder));
+  end;
+  for UDBConfig in ConfigList do
+  begin
+    // create checkbox caption
+    s:= UDBConfig.OriginalDB + ' > ' + UDBConfig.UpdatedDB;
+    if UDBConfig.IsRelease = false then s := s + ' Prerelease';
+    CheckListBox1.Items.Add(s);
+  end;
+end;
+
 
 end.

@@ -1,6 +1,7 @@
 object SelectUpdateFolder: TSelectUpdateFolder
   Left = 0
   Top = 0
+  BorderStyle = bsDialog
   Caption = 'SwimClubMeet Update Database'
   ClientHeight = 540
   ClientWidth = 419
@@ -10,7 +11,9 @@ object SelectUpdateFolder: TSelectUpdateFolder
   Font.Height = -16
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poOwnerFormCenter
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 21
   object Panel1: TPanel

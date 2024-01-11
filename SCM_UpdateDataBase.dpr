@@ -7,7 +7,8 @@ uses
   utilVersion in 'utilVersion.pas',
   Vcl.Themes,
   Vcl.Styles,
-  dlgSelectUpdateFolder in 'dlgSelectUpdateFolder.pas' {SelectUpdateFolder};
+  dlgSelectUpdateFolder in 'dlgSelectUpdateFolder.pas' {SelectUpdateFolder},
+  UDBConfig in 'UDBConfig.pas';
 
 {$R *.res}
 
@@ -17,6 +18,5 @@ begin
   TStyleManager.TrySetStyle('Windows10 SlateGray');
   Application.CreateForm(TSCMUpdateDataBase, SCMUpdateDataBase);
   Application.CreateForm(TUDBMsgBox, UDBMsgBox);
-  Application.CreateForm(TSelectUpdateFolder, SelectUpdateFolder);
   Application.Run;
 end.
