@@ -2,32 +2,37 @@ unit UDBConfig;
 
 interface
 
-uses system.IniFiles;
+uses system.IniFiles, system.SysUtils;
 
 type TUDBConfig = class(TObject)
 private
   { private declarations }
-  fDBName: string; // =SwimClubMeet
-  fOriginalDB: string; //="v1.1.5.1"
-  fUpdatedDB: string; //="v1.1.5.2"
-  fIsRelease: boolean; //=false
-  fDescription: string; //="v1.1.5.1 to v1.1.5.2"
-  fNotes: string; //="FINA disqualification codes."
-  fBase: integer; //=1
-  fVersion: integer; //=1
-  fMajor: integer; //=5
-  fMinor: integer; //=2
+    fDBName: string; // =SwimClubMeet
+    fIsRelease: boolean; // =false
+    fDescription: string; // ="v1.1.5.1 to v1.1.5.2"
+    fNotes: string; // ="FINA disqualification codes."
+
+    fBaseIn: integer;
+    fVersionIn: integer;
+    fMajorIn: integer;
+    fMinorIn: integer;
+
+    fBaseOut: integer;
+    fVersionOut: integer;
+    fMajorOut: integer;
+    fMinorOut: integer;
+
 protected
   { protected declarations }
+
 public
   { public declarations }
   constructor Create; reintroduce;
   destructor Destroy; override;
   procedure LoadIniFile(aFileName: string);
   procedure SaveIniFile(aFileName: string);
+  function GetDBConfigStr(DoInConfig: boolean): string;
 
-  property OriginalDB: string read FOriginalDB;
-  property UpdatedDB: string read fUpdatedDB;
   property IsRelease: boolean read fIsRelease;
 
 published
@@ -44,10 +49,10 @@ constructor TUDBConfig.Create;
 begin
   inherited;
   fIsRelease := false; // the configuration update is pre-release by default;
-  fBase := 1;
-  fVersion := 1;
-  fMajor := 0;
-  fMinor := 0;
+  fBaseOut := 0;
+  fVersionOut := 1;
+  fMajorOut := 0;
+  fMinorOut := 0;
 end;
 
 destructor TUDBConfig.Destroy;
@@ -56,22 +61,44 @@ begin
   inherited;
 end;
 
+function TUDBConfig.GetDBConfigStr(DoInConfig: boolean): string;
+var
+  s: string;
+begin
+  result := '';
+  s := '';
+  if DoInConfig then
+  begin
+    s := IntToStr(fBaseIn) + '.' + IntToStr(fVersionIn) + '.' +
+      IntToStr(fMajorIn) + '.' + IntToStr(fMinorIn);
+  end
+  else
+  begin
+    s := IntToStr(fBaseOut) + '.' + IntToStr(fVersionOut) + '.' +
+      IntToStr(fMajorOut) + '.' + IntToStr(fMinorOut);
+  end;
+
+  if (length(s) > 0) then result := s;
+end;
+
 procedure TUDBConfig.LoadIniFile(aFileName: string);
 var
   ini: TIniFile;
 begin
   ini := TIniFile.Create(aFileName);
   try
-    fDBName := ini.ReadString('UDB', 'DBName', '');
-    fOriginalDB := ini.ReadString('UDB', 'OriginalDB', '');
-    fUpdatedDB := ini.ReadString('UDB', 'UpdatedDB', '');
+    fDBName := ini.ReadString('UDB', 'DatabaseName', '');
     fIsRelease := ini.ReadBool('UDB', 'IsRelease', false);
     fDescription := ini.ReadString('UDB', 'Description', '');
     fNotes := ini.ReadString('UDB', 'Notes', '');
-    fBase := ini.ReadInteger('UDB', 'Base', 1);
-    fVersion := ini.ReadInteger('UDB', 'Version', 1);
-    fMajor := ini.ReadInteger('UDB', 'Major', 0);
-    fMinor := ini.ReadInteger('UDB', 'Minor', 0);
+    fBaseIn := ini.ReadInteger('UDBIN', 'Base', 1);
+    fVersionIn := ini.ReadInteger('UDBIN', 'Version', 1);
+    fMajorIn := ini.ReadInteger('UDBIN', 'Major', 0);
+    fMinorIn := ini.ReadInteger('UDBIN', 'Minor', 0);
+    fBaseOut := ini.ReadInteger('UDBOUT', 'Base', 1);
+    fVersionOut := ini.ReadInteger('UDBOUT', 'Version', 1);
+    fMajorOut := ini.ReadInteger('UDBOUT', 'Major', 0);
+    fMinorOut := ini.ReadInteger('UDBOUT', 'Minor', 0);
   finally
     ini.Free;
   end;
@@ -83,16 +110,18 @@ var
 begin
   ini := TIniFile.Create(aFileName);
   try
-    ini.WriteString('UDB', 'DBName', fDBName);
-    ini.WriteString('UDB', 'OriginalDB', fOriginalDB);
-    ini.WriteString('UDB', 'UpdatedDB', fUpdatedDB);
+    ini.WriteString('UDB', 'DatabaseName', fDBName);
     ini.WriteBool('UDB', 'IsRelease', fIsRelease);
     ini.WriteString('UDB', 'Description', fDescription);
     ini.WriteString('UDB', 'Notes', fNotes);
-    ini.WriteInteger('UDB', 'Base', fBase);
-    ini.WriteInteger('UDB', 'Version', fVersion);
-    ini.WriteInteger('UDB', 'Major', fMajor);
-    ini.WriteInteger('UDB', 'Minor', fMinor);
+    ini.WriteInteger('UDBIN', 'Base', fBaseIn);
+    ini.WriteInteger('UDBIN', 'Version', fVersionIn);
+    ini.WriteInteger('UDBIN', 'Major', fMajorIn);
+    ini.WriteInteger('UDBIN', 'Minor', fMinorIn);
+    ini.WriteInteger('UDBOUT', 'Base', fBaseOut);
+    ini.WriteInteger('UDBOUT', 'Version', fVersionOut);
+    ini.WriteInteger('UDBOUT', 'Major', fMajorOut);
+    ini.WriteInteger('UDBOUT', 'Minor', fMinorOut);
   finally
     ini.Free;
   end;
