@@ -6,7 +6,7 @@
    version="1.1"
    id="svg1159"
    sodipodi:docname="check_box.svg"
-   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
    inkscape:export-filename="check_box.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
@@ -26,15 +26,15 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      showgrid="false"
-     inkscape:zoom="10.697917"
-     inkscape:cx="40.895812"
-     inkscape:cy="22.667964"
+     inkscape:zoom="5.3489585"
+     inkscape:cx="43.84031"
+     inkscape:cy="33.744887"
      inkscape:window-width="2560"
      inkscape:window-height="1377"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1">
+     inkscape:current-layer="layer2">
     <inkscape:page
        x="0"
        y="0"
@@ -44,7 +44,9 @@
        inkscape:label="GreenCheckBox"
        inkscape:export-filename=".\GreenCheckBox.png"
        inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" />
+       inkscape:export-ydpi="96"
+       margin="0"
+       bleed="0" />
     <inkscape:page
        x="970"
        y="0"
@@ -52,10 +54,49 @@
        height="960"
        id="page432"
        inkscape:label="YellowCheckBox"
-       inkscape:export-filename="YellowCheckBox.png"
+       inkscape:export-filename="RedCross.png"
        inkscape:export-xdpi="96"
        inkscape:export-ydpi="96" />
+    <inkscape:page
+       x="1940"
+       y="0"
+       width="960"
+       height="960"
+       id="page1"
+       inkscape:export-filename="RedCross.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96"
+       inkscape:label="RedCross" />
   </sodipodi:namedview>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="RedCross">
+    <rect
+       style="display:inline;fill:#fc6464;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:0;stroke-dasharray:none;stroke-dashoffset:0.8406;paint-order:markers stroke fill;stop-color:#000000"
+       id="rect1335-1-2"
+       width="651.52869"
+       height="655.26776"
+       x="2091.4312"
+       y="248.36612"
+       rx="28.907101"
+       ry="29.997177"
+       sodipodi:insensitive="true" />
+    <path
+       d="m 2120,936 c -16,0 -30,-5.99999 -42,-17.99998 -12,-12 -18,-26 -18,-42 V 276 c 0,-16 6,-30 18,-42 12,-12 26,-18 42,-18 h 600 c 16,0 30,6 42,18 12,12 18,26 18,42 v 600.00002 c 0,16 -6,30 -18,42 C 2750,930.00001 2736,936 2720,936 Z m 0,-59.99998 h 600 V 276 H 2120 Z M 2120,276 v 600.00002 z"
+       id="path1157-6-3"
+       style="display:inline"
+       sodipodi:nodetypes="ssssssssssssscccccccc"
+       sodipodi:insensitive="true" />
+    <path
+       d="m 2207.1432,746.88007 41.0288,45.59802 c 125.0053,-129.69277 252.253,-256.76368 380.719,-382.53328 l -44.1108,-49.10096 c -125.0658,129.57588 -251.5671,257.56973 -377.637,386.03622 z"
+       style="display:inline;stroke-width:1.00636"
+       id="path1-6" />
+    <path
+       d="m 2586.5698,792.16169 44.6205,-42.05763 C 2504.278,621.96418 2379.9313,491.52571 2256.858,359.8383 l -48.0483,45.21694 c 126.798,128.20186 252.0478,257.87532 377.7601,387.10645 z"
+       style="display:inline;stroke-width:1.00792"
+       id="path1" />
+  </g>
   <g
      inkscape:groupmode="layer"
      id="layer1"
@@ -71,12 +112,13 @@
        ry="29.997177" />
     <path
        d="M 419,735 708,446 665,403 419,649 300,530 257,573 Z M 180,936 q -24,0 -42,-18 -18,-18 -18,-42 V 276 q 0,-24 18,-42 18,-18 42,-18 h 600 q 24,0 42,18 18,18 18,42 v 600 q 0,24 -18,42 -18,18 -42,18 z m 0,-60 H 780 V 276 H 180 Z m 0,-600 v 600 z"
-       id="path1157" />
+       id="path1157"
+       style="display:inline" />
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
-     inkscape:label="Layer 2">
+     inkscape:label="YellowTick">
     <rect
        style="fill:#cdd22a;fill-opacity:1;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-miterlimit:0;stroke-dasharray:none;stroke-dashoffset:0.8406;paint-order:markers stroke fill;stop-color:#000000"
        id="rect1335-1"

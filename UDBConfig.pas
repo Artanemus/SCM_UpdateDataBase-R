@@ -4,9 +4,13 @@ interface
 
 uses system.IniFiles, system.SysUtils;
 
-type TUDBConfig = class(TObject)
-private
-  { private declarations }
+type
+
+  TUDBVersion = (udbUnknown, udbIN, udbOUT);
+
+  TUDBConfig = class(TObject)
+  private
+    { private declarations }
     fDBName: string; // =SwimClubMeet
     fIsRelease: boolean; // =false
     fDescription: string; // ="v1.1.5.1 to v1.1.5.2"
@@ -22,24 +26,27 @@ private
     fMajorOut: integer;
     fMinorOut: integer;
 
-protected
-  { protected declarations }
+    fFileName: string; // full path and filename to UDBConfig.ini
 
-public
-  { public declarations }
-  constructor Create; reintroduce;
-  destructor Destroy; override;
-  procedure LoadIniFile(aFileName: string);
-  procedure SaveIniFile(aFileName: string);
-  function GetDBConfigStr(DoInConfig: boolean): string;
+  protected
+    { protected declarations }
+  public
+    { public declarations }
+    constructor Create; reintroduce;
+    destructor Destroy; override;
+    procedure LoadIniFile(aFileName: string);
+    procedure SaveIniFile(aFileName: string);
+    function GetVersionStr(PickVersion: TUDBVersion): string;
+    function GetScriptPath():string;
 
-  property IsRelease: boolean read fIsRelease;
-
-published
-  { published declarations }
-
-
-end;
+    property IsRelease: boolean read fIsRelease;
+    property FileName: string read fFileName write fFileName;
+    property BaseIN: integer read fBaseIn;
+    property VersionIN: integer read fVersionIn;
+    property MajorIN: integer read fMajorIn;
+    property MinorIN: integer read fMinorIn;
+    property Description: string read fDescription;
+  end;
 
 implementation
 
@@ -53,6 +60,7 @@ begin
   fVersionOut := 1;
   fMajorOut := 0;
   fMinorOut := 0;
+  fFileName := '';
 end;
 
 destructor TUDBConfig.Destroy;
@@ -61,19 +69,28 @@ begin
   inherited;
 end;
 
-function TUDBConfig.GetDBConfigStr(DoInConfig: boolean): string;
+function TUDBConfig.GetScriptPath: string;
+var
+  s: string;
+begin
+  result := '';
+  s := ExtractFilePath(FileName);
+  s := IncludeTrailingPathDelimiter(s);
+  if (Length(s) > 0) then result := s;
+end;
+
+function TUDBConfig.GetVersionStr(PickVersion: TUDBVersion): string;
 var
   s: string;
 begin
   result := '';
   s := '';
-  if DoInConfig then
-  begin
+  case PickVersion of
+    udbUnknown: s := '';
+    udbIN:
     s := IntToStr(fBaseIn) + '.' + IntToStr(fVersionIn) + '.' +
       IntToStr(fMajorIn) + '.' + IntToStr(fMinorIn);
-  end
-  else
-  begin
+    udbOUT:
     s := IntToStr(fBaseOut) + '.' + IntToStr(fVersionOut) + '.' +
       IntToStr(fMajorOut) + '.' + IntToStr(fMinorOut);
   end;
@@ -88,7 +105,7 @@ begin
   ini := TIniFile.Create(aFileName);
   try
     fDBName := ini.ReadString('UDB', 'DatabaseName', '');
-    fIsRelease := ini.ReadBool('UDB', 'IsRelease', false);
+    fIsRelease := ini.ReadBool('UDB', 'IsRelease', False);
     fDescription := ini.ReadString('UDB', 'Description', '');
     fNotes := ini.ReadString('UDB', 'Notes', '');
     fBaseIn := ini.ReadInteger('UDBIN', 'Base', 1);

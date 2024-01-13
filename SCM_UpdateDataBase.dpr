@@ -17,6 +17,5 @@ begin
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Windows10 SlateGray');
   Application.CreateForm(TSCMUpdateDataBase, SCMUpdateDataBase);
-  Application.CreateForm(TUDBMsgBox, UDBMsgBox);
   Application.Run;
 end.

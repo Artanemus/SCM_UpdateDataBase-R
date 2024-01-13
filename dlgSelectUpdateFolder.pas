@@ -3,38 +3,40 @@ unit dlgSelectUpdateFolder;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst, Vcl.ExtCtrls,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,  System.Types,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.CheckLst,
+  Vcl.ExtCtrls,
   UDBConfig, System.Generics.Collections;
 
 type
   TSelectUpdateFolder = class(TForm)
-    Panel1: TPanel;
-    CheckListBox1: TCheckListBox;
-    Panel2: TPanel;
     btnCancel: TButton;
     btnOk: TButton;
+    CheckListBox1: TCheckListBox;
+    Panel1: TPanel;
+    Panel2: TPanel;
     Panel3: TPanel;
-    procedure FormDestroy(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
     { Private declarations }
-    fUDBScriptsPath: string;
-    fRtnSubFolder: string;
-
-
-
-    procedure InitCheckListBoxItems(const DIR: string; ConfigList: TObjectList<TUDBConfig>);
-    function GetCheckedItems(ListBox: TCheckListBox): string;
-
+    fRootPath: string;
+    fConfigList: TObjectList<TUDBConfig>;
+    fSelectedConfig: TUDBConfig;
+    function FindFiles(const Path, Masks: string): TStringDynArray;
+//    function GetCheckedItem(ListBox: TCheckListBox): integer;
+//    function GetCheckedUDBConfig(ListBox: TCheckListBox): TUDBConfig;
+    procedure InitCheckListBoxItems(const DIR: string;
+      ConfigList: TObjectList<TUDBConfig>);
   public
     { Public declarations }
-    UDBConfigList: TObjectList<TUDBConfig>;
-    property RtnSubFolder: string read fRtnSubFolder;
-    property UDBScriptsPath: string write fUDBScriptsPath;
+    property ConfigList: TObjectList<TUDBConfig> write fConfigList;
+    property SelectedConfig: TUDBConfig read fSelectedConfig;
+    property RootPath: string write fRootPath;
   end;
 
 var
@@ -43,125 +45,120 @@ var
 implementation
 
 {$R *.dfm}
+
 uses
-  StrUtils, System.IOUtils, System.Types, System.Masks;
-
-
-procedure TSelectUpdateFolder.FormCreate(Sender: TObject);
-begin
-  fRtnSubFolder := '';
-//  UDBConfigList := TObjectList<TUDBConfig>.Create();
-//  UDBConfigList.OwnsObjects := true; // owns object
-end;
+  StrUtils, System.IOUtils, System.Masks;
 
 procedure TSelectUpdateFolder.btnCancelClick(Sender: TObject);
 begin
-  fRtnSubFolder := '';
+  fSelectedConfig := nil;
   ModalResult := mrCancel;
 end;
 
 procedure TSelectUpdateFolder.btnOkClick(Sender: TObject);
 begin
-  fRtnSubFolder := GetCheckedItems(CheckListBox1);
-  ModalResult := mrOK;
-end;
-
-procedure TSelectUpdateFolder.FormShow(Sender: TObject);
-begin
-  if fUDBScriptsPath.IsEmpty then
+  if (CheckListBox1.ItemIndex <> -1) then
   begin
-    ModalResult := mrCancel;
-    Close;
-  end;
-  InitCheckListBoxItems(fUDBScriptsPath, UDBConfigList);
-end;
-
-function TSelectUpdateFolder.GetCheckedItems(ListBox: TCheckListBox): string;
-var
-  i: Integer;
-begin
-  result := '';
-  for i := 0 to ListBox.Count - 1 do
-  begin
-    if ListBox.Checked[i] then
-    begin
-      result := ListBox.Items[i];
-      break;
-    end;
+    fSelectedConfig := TUDBConfig(CheckListBox1.Items.Objects
+      [CheckListBox1.ItemIndex]);
+    ModalResult := mrOK;
   end;
 end;
 
-function IniFileFilter(const Path: string; const SearchRec: TSearchRec): Boolean;
-var
-s: string;
-begin
-  // Return True if the file name ends with '.ini', False otherwise
-  Result :=  false;
-  s := SearchRec.Name;
-  result := s.EndsWith('.ini', True); // Use True for case-insensitive comparison
-end;
-
-function FindFileType(const Path: string; const SearchRec: TSearchRec): Boolean;
-var
-  Mask: string;
-begin
-Mask := '*.ini';
-  if MatchesMask(SearchRec.Name, Mask) then
-      exit(True);
-  exit(False);
-end;
-
-
-function MyGetFiles(const Path, Masks: string): TStringDynArray;
+function TSelectUpdateFolder.FindFiles(const Path, Masks: string): TStringDynArray;
 var
   MaskArray: TStringDynArray;
   Predicate: TDirectory.TFilterPredicate;
 begin
   MaskArray := SplitString(Masks, ';');
   Predicate :=
-    function(const Path: string; const SearchRec: TSearchRec): Boolean
+      function(const Path: string; const SearchRec: TSearchRec): Boolean
     var
       Mask: string;
     begin
       for Mask in MaskArray do
-        if MatchesMask(SearchRec.Name, Mask) then
-          exit(True);
-      exit(False);
+        if MatchesMask(SearchRec.Name, Mask) then exit(True);
+      exit(false);
     end;
-  Result := TDirectory.GetFiles(Path, Predicate);
+  result := TDirectory.GetFiles(Path, Predicate);
+end;
+
+procedure TSelectUpdateFolder.FormCreate(Sender: TObject);
+begin
+  fConfigList := nil;
+  fSelectedConfig := nil;
 end;
 
 procedure TSelectUpdateFolder.FormDestroy(Sender: TObject);
 begin
-//  UDBConfigList.free;
+  // code...
 end;
 
-procedure TSelectUpdateFolder.InitCheckListBoxItems(const DIR: string; ConfigList: TObjectList<TUDBConfig>);
+procedure TSelectUpdateFolder.FormShow(Sender: TObject);
+begin
+  if fRootPath.IsEmpty or not Assigned(fConfigList) then
+  begin
+    ModalResult := mrCancel;
+    Close;
+  end;
+  InitCheckListBoxItems(fRootPath, fConfigList);
+end;
+
+{
+function TSelectUpdateFolder.GetCheckedItem(ListBox: TCheckListBox): integer;
+var
+  i: Integer;
+begin
+  result := -1;
+  for i := 0 to ListBox.Count - 1 do
+  begin
+    if ListBox.Checked[i] then
+    begin
+      result := i;
+      break;
+    end;
+  end;
+end;
+}
+{
+function TSelectUpdateFolder.GetCheckedUDBConfig(ListBox: TCheckListBox)
+  : TUDBConfig;
+var
+  i: integer;
+begin
+  result := nil;
+  i := GetCheckedItem(ListBox);
+  if (i <> -1) then result := TUDBConfig(ListBox.Items.Objects[i]);
+end;
+}
+
+procedure TSelectUpdateFolder.InitCheckListBoxItems(const DIR: string;
+  ConfigList: TObjectList<TUDBConfig>);
 var
   Folders: TStringDynArray;
   Files: TStringDynArray;
   aFile, s: string;
   Folder: string;
-  LastFolder: string;
-  Predicate: TDirectory.TFilterPredicate;
   Masks: String;
   UDBConfig: TUDBConfig;
 begin
   Folders := TDirectory.GetDirectories(DIR);
   CheckListBox1.Items.Clear;
+  ConfigList.Clear;
   for Folder in Folders do
   begin
     // get the files in the folder
     Masks := '*.ini';
-    Files := MyGetFiles(Folder, Masks);
-    for afile in Files do
+    Files := FindFiles(Folder, Masks);
+    for aFile in Files do
     begin
       // should only be one ini file in the each directory
-      s := ExtractFileName(afile);
+      s := ExtractFileName(aFile);
       if (s = 'UDBConfig.ini') then
       begin
         UDBConfig := TUDBConfig.Create;
         UDBConfig.LoadIniFile(aFile);
+        UDBConfig.FileName := aFile;
         ConfigList.Add(UDBConfig); // owns object
       end;
     end;
@@ -172,11 +169,35 @@ begin
   for UDBConfig in ConfigList do
   begin
     // create checkbox caption
-    s:= UDBConfig.OriginalDB + ' > ' + UDBConfig.UpdatedDB;
-    if UDBConfig.IsRelease = false then s := s + ' Prerelease';
-    CheckListBox1.Items.Add(s);
+    s := UDBConfig.GetVersionStr(udbIN) + ' > ' +
+      UDBConfig.GetVersionStr(udbOUT);
+    if UDBConfig.IsRelease = false then
+      s := s + ' Prerelease';
+    CheckListBox1.Items.AddObject(s, UDBConfig);
   end;
 end;
 
+{
+function IniFileFilter(const Path: string; const SearchRec: TSearchRec)
+  : Boolean;
+var
+  s: string;
+begin
+  // Return True if the file name ends with '.ini', False otherwise
+  result := false;
+  s := SearchRec.Name;
+  result := s.EndsWith('.ini', True);
+  // Use True for case-insensitive comparison
+end;
+
+function FindFileType(const Path: string; const SearchRec: TSearchRec): Boolean;
+var
+  Mask: string;
+begin
+  Mask := '*.ini';
+  if MatchesMask(SearchRec.Name, Mask) then exit(True);
+  exit(false);
+end;
+}
 
 end.
