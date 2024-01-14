@@ -21,5 +21,14 @@
     <Transaction>2024/01/10 15:20:03.000.627,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgSelectFolder.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgSelectUpdateFolder.pas</Transaction>
     <Transaction>2024/01/11 13:19:48.000.437,=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\Unit1.pas</Transaction>
     <Transaction>2024/01/11 13:26:58.000.392,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\UDBConfig.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\Unit1.pas</Transaction>
-  </Transactions>
+  </Transactions>  <ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="dlgSelectUpdateFolder.pas"/>
+    <File Path="dlgSelectUpdateFolder.dfm"/>
+    <File Path="dlgUDBMsgBox.pas"/>
+    <File Path="dlgUDBMsgBox.dfm"/>
+    <File Path="frmSCMUpdateDataBase.pas"/>
+    <File Path="frmSCMUpdateDataBase.dfm"/>
+    <File Path="UDBConfig.pas"/>
+    <File Path="utilVersion.pas"/>
+  </ProjectSortOrder>
 </BorlandProject>

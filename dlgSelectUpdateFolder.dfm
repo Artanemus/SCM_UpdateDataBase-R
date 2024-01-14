@@ -2,9 +2,9 @@ object SelectUpdateFolder: TSelectUpdateFolder
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'SwimClubMeet Update Database'
+  Caption = 'List of Updates'
   ClientHeight = 540
-  ClientWidth = 419
+  ClientWidth = 384
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,48 +19,49 @@ object SelectUpdateFolder: TSelectUpdateFolder
   object Panel1: TPanel
     Left = 0
     Top = 41
-    Width = 419
+    Width = 384
     Height = 433
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 415
+    ExplicitWidth = 380
     ExplicitHeight = 432
-    object CheckListBox1: TCheckListBox
+    object ListBox1: TListBox
       AlignWithMargins = True
       Left = 10
       Top = 10
-      Width = 399
+      Width = 364
       Height = 413
       Margins.Left = 10
       Margins.Top = 10
       Margins.Right = 10
       Margins.Bottom = 10
+      AutoComplete = False
       Align = alClient
-      CheckBoxPadding = 5
+      BevelKind = bkFlat
+      ExtendedSelect = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -21
+      Font.Height = -24
       Font.Name = 'Segoe UI'
       Font.Style = [fsBold]
-      ItemHeight = 35
+      ItemHeight = 32
       Items.Strings = (
-        'v1.0.0.0'
-        'v1.1.5.0'
-        'v1.1.5.1'
-        'v1.1.5.2'
-        'v1.1.5.3')
+        '1.0.0.0'
+        '1.0.0.2')
       ParentFont = False
       Sorted = True
       TabOrder = 0
-      ExplicitWidth = 395
+      StyleElements = [seClient, seBorder]
+      OnDblClick = ListBox1DblClick
+      ExplicitWidth = 360
       ExplicitHeight = 412
     end
   end
   object Panel2: TPanel
     Left = 0
     Top = 474
-    Width = 419
+    Width = 384
     Height = 66
     Align = alBottom
     BevelEdges = [beTop]
@@ -68,9 +69,9 @@ object SelectUpdateFolder: TSelectUpdateFolder
     BevelOuter = bvNone
     TabOrder = 1
     ExplicitTop = 473
-    ExplicitWidth = 415
+    ExplicitWidth = 380
     object btnCancel: TButton
-      Left = 98
+      Left = 81
       Top = 15
       Width = 108
       Height = 35
@@ -80,7 +81,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
       OnClick = btnCancelClick
     end
     object btnOk: TButton
-      Left = 212
+      Left = 195
       Top = 15
       Width = 108
       Height = 35
@@ -93,12 +94,12 @@ object SelectUpdateFolder: TSelectUpdateFolder
   object Panel3: TPanel
     Left = 0
     Top = 0
-    Width = 419
+    Width = 384
     Height = 41
     Align = alTop
     BevelOuter = bvNone
-    Caption = 'Select update to perform.'
+    Caption = 'Select an update...'
     TabOrder = 2
-    ExplicitWidth = 415
+    ExplicitWidth = 380
   end
 end

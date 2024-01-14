@@ -12,7 +12,9 @@ uses
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, Vcl.ComCtrls,
   System.Actions, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImage, dlgSelectUpdateFolder, UDBConfig, System.Generics.Collections;
+  Vcl.VirtualImage, dlgSelectUpdateFolder, UDBConfig,
+  System.Generics.Collections, Vcl.Buttons, System.ImageList, Vcl.ImgList,
+  Vcl.VirtualImageList;
 
 type
   TSCMUpdateDataBase = class(TForm)
@@ -33,13 +35,15 @@ type
     GroupBox1: TGroupBox;
     Image2: TImage;
     ImageCollection1: TImageCollection;
-    Label1: TLabel;
     Label5: TLabel;
-    Label6: TLabel;
-    Label7: TLabel;
-    lblINDB: TLabel;
-    lblOUTDB: TLabel;
+    lblCurrDBVer: TLabel;
+    lblDBCURR: TLabel;
+    lblDBIN: TLabel;
+    lblDBOUT: TLabel;
+    lblPassword: TLabel;
     lblPreRelease: TLabel;
+    lblServerName: TLabel;
+    lblUser: TLabel;
     Memo1: TMemo;
     Panel1: TPanel;
     Panel2: TPanel;
@@ -48,20 +52,25 @@ type
     progressBar: TProgressBar;
     qryDBExists: TFDQuery;
     qryVersion: TFDQuery;
+    sbtnPassword: TSpeedButton;
     scmConnection: TFDConnection;
-    vimgPassed: TVirtualImage;
-    vimgPassed2: TVirtualImage;
+    shapeDBCURR: TShape;
+    vimgChkBoxDBIN: TVirtualImage;
+    vimgChkBoxDBOUT: TVirtualImage;
     VirtualImage1: TVirtualImage;
+    VirtualImageList1: TVirtualImageList;
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure actnDisconnectExecute(Sender: TObject);
     procedure actnDisconnectUpdate(Sender: TObject);
     procedure actnSelectExecute(Sender: TObject);
+    procedure actnSelectUpdate(Sender: TObject);
     procedure actnUDBExecute(Sender: TObject);
     procedure actnUDBUpdate(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure sbtnPasswordClick(Sender: TObject);
   private
   const
     IN_Major = 5;
@@ -97,8 +106,9 @@ type
     FSQLPath: String;
     fUpdateScriptSubPath: String;
     UDBConfigList: TObjectList<TUDBConfig>;
-//    function CheckVersionControlText(var SQLPath: string): Boolean;
-    function CompareQryVsSelected(): Boolean;
+    fIsSynced: boolean; // updated after calling CompareQryVsSelected
+    // function CheckVersionControlText(var SQLPath: string): Boolean;
+    procedure UpdateSyncedState;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
       WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
       var ErrorCode: Integer): Boolean;
@@ -106,13 +116,14 @@ type
     function ExecuteProcessSQLcmd(SQLFile, ServerName, UserName,
       Password: String; var errCode: Integer; UseOSAthent: Boolean = true;
       RunMinimized: Boolean = false; Log: Boolean = false): Boolean;
-//    function BuildUpdateScriptSubPath(): String;
+    // function BuildUpdateScriptSubPath(): String;
 
     procedure GetFileList(filePath, fileMask: String; var sl: TStringList);
     procedure LoadConfigData;
     procedure QueryDBVersion();
     procedure SaveConfigData;
-    procedure SimpleLoadSettingString(ASection, AName: String; var AValue: String);
+    procedure SimpleLoadSettingString(ASection, AName: String;
+      var AValue: String);
     procedure SimpleMakeTemporyFDConnection(Server, User, Password: String;
       OsAuthent: Boolean);
     procedure SimpleSaveSettingString(ASection, AName, AValue: String);
@@ -134,63 +145,50 @@ uses System.IOUtils, System.Types, System.IniFiles,
 
 {$R *.dfm}
 
-{
-function TSCMUpdateDataBase.BuildUpdateScriptSubPath: String;
-begin
-  Result := defUpdateScriptsRootPath + 'v' + IntToStr(OUT_Model) + '.' +
-    IntToStr(OUT_Version) + '.' + IntToStr(OUT_Major) + '.' +
-    IntToStr(OUT_Minor) + '\';
-end;
-}
-
 procedure TSCMUpdateDataBase.actnConnectExecute(Sender: TObject);
 begin
-  // TODO : do we have the text inputted to make a connection?
-  if edtServerName.Text = '' then
-  begin
-    Beep;
-    exit;
-  end;
-
+  // Data entry checks.
+  if edtServerName.Text = '' then exit;
   if not chkbUseOSAuthentication.Checked then
-    if edtUser.Text = '' then
-    begin
-      Beep;
-      exit;
-    end;
+    if edtUser.Text = '' then exit;
 
-  // attempt a 'simple' connection to SQLEXPRESS
-  // read SCM DB version
+  // Attempt a 'simple' connection to SQLEXPRESS
   SimpleMakeTemporyFDConnection(edtServerName.Text, edtUser.Text,
     edtPassword.Text, chkbUseOSAuthentication.Checked);
+
+  // Display info
+  Memo1.Clear;
+
   if scmConnection.Connected then
   begin
-    Memo1.Clear;
-    Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL' + sLineBreak);
+    // Read the current database version and display
+    QueryDBVersion;
+    lblDBCURR.Caption := IntToStr(FDBModel) + '.' + IntToStr(FDBVersion) + '.' +
+      IntToStr(FDBMajor) + '.' + IntToStr(FDBMinor);
+    lblDBCURR.Visible := true;
 
-
-
-    Memo1.Lines.Add('Reading SwimClubMeet internal database info ' +
-      FDBVerCtrlStrVerbose + sLineBreak);
+    if Assigned(fSelectedUDBConfig) then // AND CONNECTED
+    begin
+      UpdateSyncedState;  // update fSynced.
+      if not fIsSynced then
+            Memo1.Lines.Add('WARNING: The selected update doesn''t match the current version.');
+    end;
+    Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL');
     Memo1.Lines.Add('ALWAYS backup your database before performing an update!' +
       sLineBreak);
-    if not BuildDone then
-      Memo1.Lines.Add('READY ... Press ''Update DataBase'' to continue.')
-    else
-      Memo1.Lines.Add('READY ...');
-  end;
-  // Call to action is required: update button state.
-  actnDisconnectUpdate(self);
-
-  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
+   end
+  else
   begin
-    vimgPassed.Visible := true;
-    QueryDBVersion;
-    // DISPLAYS A BRIGHT GREEN CHECKBOX
-    if CompareQryVsSelected then vimgPassed.ImageName := 'check_box'
-    else vimgPassed.ImageName := 'RedCross';
-  end
-  else vimgPassed.Visible := false;
+    Memo1.Lines.Add('Connection failed.' + sLineBreak);
+    Memo1.Lines.Add('Check your input settings.' + sLineBreak);
+  end;
+  Memo1.Lines.Add('READY ...');
+
+  // Update button states in groupbox1.
+  actnDisconnectUpdate(self);
+  actnConnectUpdate(self);
+  actnSelectUpdate(self)
+
 
 end;
 
@@ -201,13 +199,22 @@ begin
   begin
     btnConnect.Visible := false;
     btnUDB.Visible := true; // when connected ... updating permitted.
+    // other display elements
+    shapeDBCURR.Visible := true;
+    lblDBCURR.Visible := true;
+    lblCurrDBVer.Visible := true;
   end
   else
   begin
     btnConnect.Visible := true;
+    // other display elements
+    shapeDBCURR.Visible := false;
+    lblDBCURR.Visible := false;
+    lblCurrDBVer.Visible := false;
   end;
+
   if BuildDone then // only one build per application running
-    btnUDB.Visible := false;
+      btnUDB.Visible := false;
 end;
 
 procedure TSCMUpdateDataBase.actnDisconnectExecute(Sender: TObject);
@@ -233,7 +240,7 @@ begin
     btnUDB.Visible := false; // no connection ... no updating.
   end;
   if BuildDone then // only one build per application running
-    btnUDB.Visible := false;
+      btnUDB.Visible := false;
 end;
 
 procedure TSCMUpdateDataBase.actnSelectExecute(Sender: TObject);
@@ -254,6 +261,8 @@ begin
     + IncludeTrailingPathDelimiter(fUpdateScriptSubPath);
 {$IFEND}
 
+  Memo1.Clear;
+
   // DOES PATH EXISTS?
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
   begin
@@ -265,55 +274,84 @@ begin
     // only one shot at building granted
     btnUDB.Visible := false;
     BuildDone := true;
-    Memo1.Lines.Add(s);
+    Memo1.Lines.Add('ERROR: Missing UDB system sub-folder.') ;
+    Memo1.Lines.Add('Press EXIT when ready.');
     exit;
   end;
 
-  if Assigned(UDBConfigList) then
+  // Let the user select a database update configuration.
+  dlg := TSelectUpdateFolder.Create(self);
+  dlg.RootPath := rootDIR;
+  dlg.ConfigList := UDBConfigList;
+  mr := dlg.ShowModal;
+  if IsPositiveResult(mr)then
   begin
-    // Let the user select a database update configuration.
-    dlg := TSelectUpdateFolder.Create(self);
-    dlg.RootPath := rootDIR;
-    dlg.ConfigList := UDBConfigList;
-    mr := dlg.ShowModal;
-    if IsPositiveResult(mr) and Assigned(dlg.SelectedConfig) then
+    if Assigned(dlg.SelectedConfig) then
     begin
       fSelectedUDBConfig := dlg.SelectedConfig;
       s := ExtractFilePath(fSelectedUDBConfig.GetScriptPath);
       if System.SysUtils.DirectoryExists(s) then
       begin
-        lblINDB.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
-        lblOUTDB.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
-        if fSelectedUDBConfig.IsRelease then
-          lblPreRelease.Visible := false
-        else
-          lblPreRelease.Visible := true;
-      end
-      else
-      begin
-        lblINDB.Caption := '';
-        lblOUTDB.Caption := '';
-          lblPreRelease.Visible := false;
+        lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
+        lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
       end;
     end;
-    dlg.Free;
-  end
-  else  fSelectedUDBConfig := nil;
+  end;
+  dlg.Free;
 
+  // After each select execute - check sync.
   if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
   begin
-    vimgPassed.Visible := true;
     // read the current DB's model.version.major.minor
     QueryDBVersion;
     // is the current DB version = UDBConfig version?
-    if CompareQryVsSelected then vimgPassed.ImageName := 'check_box'
-    else vimgPassed.ImageName := 'RedCross';
-  end
-  else vimgPassed.Visible := false;
+    UpdateSyncedState;  // update fSynced
+    if not fIsSynced then
+    begin
+      Memo1.Lines.Add('WARNING: The selected update doesn''t match the current version.');
+    end;
+  end;
+  Memo1.Lines.Add('READY ...');
 
 end;
 
+procedure TSCMUpdateDataBase.actnSelectUpdate(Sender: TObject);
+begin
+  if Assigned(fSelectedUDBConfig) then
+  begin
+    if scmConnection.Connected then
+    begin
+      if fIsSynced then
+      begin
+        if vimgChkBoxDBIN.ImageName <> 'check_box' then
+            vimgChkBoxDBIN.ImageName := 'check_box';
+      end
+      else
+      begin
+        if vimgChkBoxDBIN.ImageName <> 'RedCross' then
+            vimgChkBoxDBIN.ImageName := 'RedCross';
+      end;
+      vimgChkBoxDBIN.Visible := true;
+      if BuildDone then vimgChkBoxDBOUT.Visible := true;
+    end
+    else
+    begin
+      vimgChkBoxDBIN.Visible := false;
+      vimgChkBoxDBOUT.Visible := false;
+    end;
 
+    lblDBIN.Visible := true;
+    lblDBOUT.Visible := true;
+    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
+  end
+  else
+  begin
+    lblDBIN.Visible := true;
+    lblDBOUT.Visible := true;
+    lblPreRelease.Visible := false;
+  end;
+
+end;
 
 // ---------------------------------------------------------------
 // E X E C U T E .
@@ -333,15 +371,13 @@ begin
   CntrlKeyPressed := false;
   Memo1.Clear;
 
-  if not scmConnection.Connected then
-    exit;
+  if not scmConnection.Connected then exit;
 
   // ---------------------------------------------------------------
   // H I D D E N  - O P T I O N A L   M E T H O D
   // Locate any update folder (containing SQL update files)
   // ---------------------------------------------------------------
-  if ((GetKeyState(VK_CONTROL) AND 128) = 128) then
-    CntrlKeyPressed := true;
+  if ((GetKeyState(VK_CONTROL) AND 128) = 128) then CntrlKeyPressed := true;
 
   // ---------------------------------------------------------------
   // Does the SwimClubMeet database exist on MS SQLEXPRESS?
@@ -386,26 +422,29 @@ begin
     exit;
   end;
 
-
-
   // ---------------------------------------------------------------
   // A configuration folder hasn't been select. We have no Config object.
   // ---------------------------------------------------------------
   if not Assigned(fSelectedUDBConfig) then
   begin
-      s := 'No configuration folder has been assigned.'  + sLineBreak +
-        'Use the select folder button.';
-      MessageDlg(s, TMsgDlgType.mtWarning, [mbOk], 0);
-      btnUDB.Visible := false;
-      BuildDone := false;
-      Memo1.Lines.Add(s);
-      exit;
+    s := 'No configuration folder has been assigned.' + sLineBreak +
+      'Use the select folder button.';
+    MessageDlg(s, TMsgDlgType.mtWarning, [mbOk], 0);
+    btnUDB.Visible := false;
+    BuildDone := false;
+    Memo1.Lines.Add(s);
+    exit;
   end;
+
+  // ---------------------------------------------------------------
+  // update fIsSynced state. Current version = UDBConfig DBIN
+  // ---------------------------------------------------------------
+  UpdateSyncedState;
 
   // ---------------------------------------------------------------
   // Does the current DB 'SCM version' sync with this update app.
   // ---------------------------------------------------------------
-  if not CompareQryVsSelected then
+  if not fIsSynced then
   begin
     // NOTE: L E T   O P T I O N A L   M E T H O D   T H R U  .
     if not CntrlKeyPressed then
@@ -447,8 +486,7 @@ begin
         OkButtonLabel := 'Select';
         DefaultFolder := FDir;
         FileName := FDir;
-        if Execute then
-          FSQLPath := FileName;
+        if Execute then FSQLPath := FileName;
       finally
         Free;
       end;
@@ -494,8 +532,7 @@ begin
   // ---------------------------------------------------------------
   // Is there a SCM_VersionControl.txt?
   // ---------------------------------------------------------------
-  success := CompareQryVsSelected;
-  if not success then
+  if not fIsSynced then
   begin
     // L E T   O P T I O N A L   M E T H O D   T H R U  .
     if CntrlKeyPressed then
@@ -547,10 +584,9 @@ end;
 procedure TSCMUpdateDataBase.actnUDBUpdate(Sender: TObject);
 begin
   if BuildDone then // only one build per application running
-    btnUDB.Visible := false;
-  if not Assigned(fSelectedUDBConfig) then
-    btnUDB.Enabled := false
-  else  btnUDB.Enabled := true;
+      btnUDB.Visible := false;
+  if not Assigned(fSelectedUDBConfig) then btnUDB.Enabled := false
+  else btnUDB.Enabled := true;
 end;
 
 procedure TSCMUpdateDataBase.btnCancelClick(Sender: TObject);
@@ -558,6 +594,18 @@ begin
   scmConnection.Close;
   ModalResult := mrCancel;
   Close;
+end;
+
+procedure TSCMUpdateDataBase.UpdateSyncedState;
+begin
+  fIsSynced := false;
+  if Assigned(fSelectedUDBConfig) and scmConnection.Connected then
+  begin
+    QueryDBVersion;
+    if (FDBVersion = fSelectedUDBConfig.VersionIN) AND
+      (FDBMajor = fSelectedUDBConfig.MajorIN) AND
+      (FDBMinor = fSelectedUDBConfig.MinorIN) then fIsSynced := true;
+  end;
 end;
 
 function TSCMUpdateDataBase.ExecuteProcess(const FileName, Params: string;
@@ -572,7 +620,7 @@ begin
   Result := true;
   CmdLine := '"' + FileName + '" ' + Params;
   if Folder = '' then
-    Folder := ExcludeTrailingPathDelimiter(ExtractFilePath(FileName));
+      Folder := ExcludeTrailingPathDelimiter(ExtractFilePath(FileName));
   ZeroMemory(@StartupInfo, SizeOf(StartupInfo));
   StartupInfo.cb := SizeOf(StartupInfo);
   if RunMinimized then
@@ -580,10 +628,8 @@ begin
     StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
     StartupInfo.wShowWindow := SW_SHOWMINIMIZED;
   end;
-  if Folder <> '' then
-    WorkingDirP := PChar(Folder)
-  else
-    WorkingDirP := nil;
+  if Folder <> '' then WorkingDirP := PChar(Folder)
+  else WorkingDirP := nil;
   if not CreateProcess(nil, PChar(CmdLine), nil, nil, false, 0, nil,
     WorkingDirP, StartupInfo, ProcessInfo) then
   begin
@@ -594,12 +640,10 @@ begin
   with ProcessInfo do
   begin
     CloseHandle(hThread); // CHECK - CLOSE HERE? or move line down?
-    if WaitUntilIdle then
-      WaitForInputIdle(hProcess, INFINITE);
+    if WaitUntilIdle then WaitForInputIdle(hProcess, INFINITE);
     // CHECK ::WaitUntilTerminated was used in C++ sqlcmd.exe
     if WaitUntilTerminated then
-      repeat
-        Application.ProcessMessages;
+      repeat Application.ProcessMessages;
       until MsgWaitForMultipleObjects(1, hProcess, false, INFINITE, QS_ALLINPUT)
         <> WAIT_OBJECT_0 + 1;
     CloseHandle(hProcess);
@@ -627,7 +671,7 @@ begin
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // update button remains visible - try again ....
     btnUDB.Visible := true;
-    vimgPassed.Visible := false;
+    vimgChkBoxDBIN.Visible := false;
     FreeAndNil(sl);
     Memo1.Lines.Add(s);
     exit;
@@ -650,8 +694,7 @@ begin
     Memo1.Lines.Add('Sending log to ' + Str + sLineBreak);
 
     // clear the log file
-    if FileExists(Str) then
-      DeleteFile(Str);
+    if FileExists(Str) then DeleteFile(Str);
 
     for fp in sl do
     begin
@@ -676,8 +719,8 @@ begin
       progressBar.Position := progressBar.Position + 1;
     end;
     Memo1.Lines.Add(sLineBreak + 'FINISHED');
-    vimgPassed2.ImageIndex := 2; // GREEN CHECK MARK
-    vimgPassed2.Visible := true;
+    vimgChkBoxDBOUT.ImageIndex := 2; // GREEN CHECK MARK
+    vimgChkBoxDBOUT.Visible := true;
     if errCount = 0 then
     begin
       Memo1.Lines.Add('ExecuteProcess completed without errors.' + sLineBreak);
@@ -708,7 +751,7 @@ begin
   end
   else
     // we had scripts ... but user didn't do a build
-    btnUDB.Visible := true;
+      btnUDB.Visible := true;
 
   FreeAndNil(sl);
 
@@ -731,8 +774,7 @@ begin
   errCode := 0;
 
   // the string isn't empty
-  if SQLFile.IsEmpty then
-    exit;
+  if SQLFile.IsEmpty then exit;
 
   quotedSQLFile := AnsiQuotedStr(SQLFile, '"');
   {
@@ -749,10 +791,10 @@ begin
   Param := '-S ' + ServerName;
   if UseOSAthent then
     // using windows OS Authentication
-    Param := Param + ' -E '
+      Param := Param + ' -E '
   else
     // UserName and Password
-    Param := Param + ' -U ' + UserName + ' -P ' + Password;
+      Param := Param + ' -U ' + UserName + ' -P ' + Password;
   // input file
   Param := Param + ' -i ' + quotedSQLFile + ' ';
 
@@ -807,17 +849,14 @@ begin
     end;
   end;
 
-  if passed then
-    Result := true; // flag success
+  if passed then Result := true; // flag success
 
 end;
 
 procedure TSCMUpdateDataBase.FormCreate(Sender: TObject);
 begin
-  BuildDone := false; // clear BMAC critical error flag
-  // Display the Major.Minor.Release.Build version details
-  // utilVersion.FileVersion +
-  Caption := 'UpdateDataBase. ''Version-up'' your SwimClubMeet database.';
+  // clear BMAC critical error flag
+  BuildDone := false;
   // Prepare the display
   GroupBox1.Visible := true;
   btnConnect.Visible := true;
@@ -833,20 +872,27 @@ begin
   FDBMinor := 0;
   FDBVerCtrlStr := '';
   FDBVerCtrlStrVerbose := '';
-  vimgPassed.Visible := false;
-  vimgPassed2.Visible := false;
-  lblINDB.Caption := '0.0.0.0';
-  lblOUTDB.Caption := '0.0.0.0';
+  vimgChkBoxDBIN.Visible := false;
+  vimgChkBoxDBOUT.Visible := false;
+  lblDBIN.Caption := '';
+  lblDBOUT.Caption := '';
+  lblDBCURR.Caption := '';
+  lblDBCURR.Visible := false;
   lblPreRelease.Visible := false;
-
+  fIsSynced := false;
+  // default script folder - intiated by INNO installer.
   fUpdateScriptSubPath := 'UDB_SCRIPTS\';
-
-  UDBConfigList := TObjectList<TUDBConfig>.Create(true);// owns object
+  // hide password entry.
+  sbtnPassword.Down := true;
+  edtPassword.PasswordChar := '*';
+  // A custom class to hold all the info on each update variant.
+  UDBConfigList := TObjectList<TUDBConfig>.Create(true); // owns object
 
 end;
 
 procedure TSCMUpdateDataBase.FormDestroy(Sender: TObject);
 begin
+  // release custom class data.
   UDBConfigList.Clear;
   UDBConfigList.Free;
 end;
@@ -872,8 +918,35 @@ begin
   end;
   // * Populate the stringlist with matching filenames
   sl.Clear();
-  for fn in List do
-    sl.Add(fn);
+  for fn in List do sl.Add(fn);
+end;
+
+procedure TSCMUpdateDataBase.LoadConfigData;
+var
+  ASection: string;
+  Server: string;
+  User: string;
+  Password: string;
+  AValue: string;
+  AName: string;
+
+begin
+  ASection := SectionName;
+  AName := 'Server';
+  SimpleLoadSettingString(ASection, AName, Server);
+  if Server.IsEmpty then edtServerName.Text := 'localHost\SQLEXPRESS'
+  else edtServerName.Text := Server;
+  AName := 'User';
+  SimpleLoadSettingString(ASection, AName, User);
+  edtUser.Text := User;
+  AName := 'Password';
+  SimpleLoadSettingString(ASection, AName, Password);
+  edtPassword.Text := Password;
+  AName := 'OSAuthent';
+  SimpleLoadSettingString(ASection, AName, AValue);
+  if (Pos('y', AValue) <> 0) or (Pos('Y', AValue) <> 0) then
+      chkbUseOSAuthentication.Checked := true
+  else chkbUseOSAuthentication.Checked := false;
 end;
 
 procedure TSCMUpdateDataBase.QueryDBVersion();
@@ -916,39 +989,6 @@ begin
 
 end;
 
-{$REGION 'SIMPLE LOAD ROUTINES FOR TEMPORY FDAC CONNECTION'}
-
-procedure TSCMUpdateDataBase.LoadConfigData;
-var
-  ASection: string;
-  Server: string;
-  User: string;
-  Password: string;
-  AValue: string;
-  AName: string;
-
-begin
-  ASection := SectionName;
-  AName := 'Server';
-  SimpleLoadSettingString(ASection, AName, Server);
-  if Server.IsEmpty then
-    edtServerName.Text := 'localHost\SQLEXPRESS'
-  else
-    edtServerName.Text := Server;
-  AName := 'User';
-  SimpleLoadSettingString(ASection, AName, User);
-  edtUser.Text := User;
-  AName := 'Password';
-  SimpleLoadSettingString(ASection, AName, Password);
-  edtPassword.Text := Password;
-  AName := 'OSAuthent';
-  SimpleLoadSettingString(ASection, AName, AValue);
-  if (Pos('y', AValue) <> 0) or (Pos('Y', AValue) <> 0) then
-    chkbUseOSAuthentication.Checked := true
-  else
-    chkbUseOSAuthentication.Checked := false;
-end;
-
 procedure TSCMUpdateDataBase.SaveConfigData;
 var
   ASection, AName, AValue: String;
@@ -962,16 +1002,25 @@ begin
     AName := 'Password';
     SimpleSaveSettingString(ASection, AName, edtPassword.Text);
     AName := 'OSAuthent';
-    if chkbUseOSAuthentication.Checked = true then
-      AValue := 'Yes'
-    else
-      AValue := 'No';
+    if chkbUseOSAuthentication.Checked = true then AValue := 'Yes'
+    else AValue := 'No';
     SimpleSaveSettingString(ASection, AName, AValue);
   end
 
 end;
 
-procedure TSCMUpdateDataBase.SimpleLoadSettingString(ASection, AName: String; var AValue: String);
+procedure TSCMUpdateDataBase.sbtnPasswordClick(Sender: TObject);
+begin
+  if TSpeedButton(Sender).Down then
+    edtPassword.PasswordChar := '*'
+  else
+    edtPassword.PasswordChar := #0;
+end;
+
+{$REGION 'SIMPLE LOAD ROUTINES FOR TEMPORY FDAC CONNECTION'}
+
+procedure TSCMUpdateDataBase.SimpleLoadSettingString(ASection, AName: String;
+  var AValue: String);
 var
   ini: TIniFile;
 begin
@@ -995,15 +1044,12 @@ var
   Value: String;
 begin
 
-  if Server.IsEmpty then
-    exit;
+  if Server.IsEmpty then exit;
 
   if not OsAuthent then
-    if User.IsEmpty then
-      exit;
+    if User.IsEmpty then exit;
 
-  if (scmConnection.Connected) then
-    scmConnection.Connected := false;
+  if (scmConnection.Connected) then scmConnection.Connected := false;
 
   scmConnection.Params.Clear();
   scmConnection.Params.Add('Server=' + Server);
@@ -1012,10 +1058,8 @@ begin
   scmConnection.Params.Add('Database=SwimClubMeet');
   scmConnection.Params.Add('User_name=' + User);
   scmConnection.Params.Add('Password=' + Password);
-  if OsAuthent then
-    Value := 'Yes'
-  else
-    Value := 'No';
+  if OsAuthent then Value := 'Yes'
+  else Value := 'No';
   scmConnection.Params.Add('OSAuthent=' + Value);
   scmConnection.Params.Add('Mars=yes');
   scmConnection.Params.Add('MetaDefSchema=dbo');
@@ -1024,102 +1068,12 @@ begin
   scmConnection.Connected := true;
 
   // ON SUCCESS - Save connection details.
-  if scmConnection.Connected Then
-    SaveConfigData;
+  if scmConnection.Connected Then SaveConfigData;
 end;
 
-function TSCMUpdateDataBase.CompareQryVsSelected: Boolean;
-begin
-  Result := false;
-  if Assigned(fSelectedUDBConfig) and scmConnection.Connected then
-  begin
-    QueryDBVersion;
-    if (FDBVersion = fSelectedUDBConfig.VersionIN) AND
-      (FDBMajor = fSelectedUDBConfig.MajorIN) AND
-      (FDBMinor = fSelectedUDBConfig.MinorIN) then Result := true;
-  end;
-end;
 
-{
-function TSCMUpdateDataBase.CheckVersionControlText
-  (var SQLPath: string): Boolean;
-var
-  s, s2: string;
-  slv: TStringList;
-  i, Base, version, Major, Minor: Integer;
-begin
-  // Look for version control. Is the update permitted?
-  // TODO: add additional params to tighten params
-  Result := false;
-  Base := 0;
-  version := 0;
-  Major := 0;
-  Minor := 0;
-
-  if FDBVersion > 0 then
-  begin
-    s := SQLPath + 'SCM_VersionControl.txt';
-    s2 := '';
-    if FileExists(s) then
-    begin
-      slv := TStringList.Create;
-      slv.LoadFromFile(s);
-
-      // BASE
-      i := slv.IndexOfName('Base');
-      if i <> -1 then
-      begin
-        s := slv.ValueFromIndex[i];
-        s2 := s2 + s;
-        Base := StrToIntDef(s, 0);
-      end;
-
-      // VERSION ...
-      i := slv.IndexOfName('Version');
-      if i <> -1 then
-      begin
-        s := slv.ValueFromIndex[i];
-        s2 := s2 + '.' + s;
-        version := StrToIntDef(s, 0);
-      end;
-
-      // Major ...
-      i := slv.IndexOfName('Major');
-      if i <> -1 then
-      begin
-        s := slv.ValueFromIndex[i];
-        s2 := s2 + '.' + s;
-        Major := StrToIntDef(s, 0);
-      end;
-
-      // Minor ...
-      i := slv.IndexOfName('Minor');
-      if i <> -1 then
-      begin
-        s := slv.ValueFromIndex[i];
-        s2 := s2 + '.' + s;
-        Minor := StrToIntDef(s, 0);
-      end;
-
-      s2 := FDBVerCtrlStr + ' >>> ' + s2;
-      Memo1.Lines.Add('Version control reported: ' + s2);
-
-      // VALIDATE update database values
-      if (Base = OUT_Model) AND (version = OUT_Version) AND (Major = OUT_Major)
-        AND (Minor = OUT_Minor) then
-      begin
-        Result := true;
-        vimgPassed2.ImageIndex := 1; // YELLOW CHECK MARK
-        vimgPassed2.Visible := true;
-      end;
-
-      FreeAndNil(slv);
-    end;
-  end;
-end;
-}
-
-procedure TSCMUpdateDataBase.SimpleSaveSettingString(ASection, AName, AValue: String);
+procedure TSCMUpdateDataBase.SimpleSaveSettingString(ASection, AName,
+  AValue: String);
 var
   ini: TIniFile;
 begin
@@ -1133,6 +1087,8 @@ begin
 
 end;
 
+
 {$ENDREGION}
+
 
 end.

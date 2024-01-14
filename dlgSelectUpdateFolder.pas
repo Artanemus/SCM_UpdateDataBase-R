@@ -13,15 +13,16 @@ type
   TSelectUpdateFolder = class(TForm)
     btnCancel: TButton;
     btnOk: TButton;
-    CheckListBox1: TCheckListBox;
     Panel1: TPanel;
     Panel2: TPanel;
     Panel3: TPanel;
+    ListBox1: TListBox;
     procedure btnCancelClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure ListBox1DblClick(Sender: TObject);
   private
     { Private declarations }
     fRootPath: string;
@@ -57,10 +58,10 @@ end;
 
 procedure TSelectUpdateFolder.btnOkClick(Sender: TObject);
 begin
-  if (CheckListBox1.ItemIndex <> -1) then
+  if (ListBox1.ItemIndex <> -1) then
   begin
-    fSelectedConfig := TUDBConfig(CheckListBox1.Items.Objects
-      [CheckListBox1.ItemIndex]);
+    fSelectedConfig := TUDBConfig(ListBox1.Items.Objects
+      [ListBox1.ItemIndex]);
     ModalResult := mrOK;
   end;
 end;
@@ -143,7 +144,7 @@ var
   UDBConfig: TUDBConfig;
 begin
   Folders := TDirectory.GetDirectories(DIR);
-  CheckListBox1.Items.Clear;
+  ListBox1.Items.Clear;
   ConfigList.Clear;
   for Folder in Folders do
   begin
@@ -164,7 +165,7 @@ begin
     end;
 
     // LastFolder := ExtractFileName(ExcludeTrailingPathDelimiter(Folder));
-    // CheckListBox1.Items.Add(LowerCase(LastFolder));
+    // ListBox1.Items.Add(LowerCase(LastFolder));
   end;
   for UDBConfig in ConfigList do
   begin
@@ -173,8 +174,13 @@ begin
       UDBConfig.GetVersionStr(udbOUT);
     if UDBConfig.IsRelease = false then
       s := s + ' Prerelease';
-    CheckListBox1.Items.AddObject(s, UDBConfig);
+    ListBox1.Items.AddObject(s, UDBConfig);
   end;
+end;
+
+procedure TSelectUpdateFolder.ListBox1DblClick(Sender: TObject);
+begin
+  btnOkClick(Sender);
 end;
 
 {
