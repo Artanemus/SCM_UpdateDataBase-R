@@ -26,7 +26,7 @@ type
     btnCancel: TButton;
     btnConnect: TButton;
     btnDisconnect: TButton;
-    btnSelectFolder: TButton;
+    btnSelectUpdate: TButton;
     btnUDB: TButton;
     chkbUseOSAuthentication: TCheckBox;
     edtPassword: TEdit;
@@ -71,8 +71,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure sbtnPasswordClick(Sender: TObject);
-  private
-  const
+  private const
     IN_Major = 5;
     IN_Minor = 0;
     // ---------------------------------------------------------
@@ -104,12 +103,9 @@ type
     FDBMinor: Integer;
     FDBModel: Integer;
     FDBVersion: Integer;
-
-    fSelectedUDBConfig: TUDBConfig; // reference only
-    FSQLPath: String;
-    fUpdateScriptSubPath: String;
+    fSelectedUDBConfig: TUDBConfig; // reference to selected TUDBConfig objrct
     UDBConfigList: TObjectList<TUDBConfig>;
-    fIsSynced: boolean; // updated after calling CompareQryVsSelected
+    fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
     procedure UpdateIsSyncedState;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
@@ -139,7 +135,7 @@ const
   logOutFn = '\Documents\SCM_UpdateDataBase.log';
   SectionName = 'SCM_UpdateDataBase';
   logOutFnTmp = '\Documents\SCM_UpdateDataBase.tmp';
-  defUpdateScriptsRootPath = 'UPDATE_SCRIPTS\';
+  defSubPath = 'UDB_SCRIPTS\';
 
 implementation
 
@@ -149,6 +145,9 @@ uses System.IOUtils, System.Types, System.IniFiles,
 {$R *.dfm}
 
 procedure TSCMUpdateDataBase.actnConnectExecute(Sender: TObject);
+var
+  errCount: Integer;
+  s: string;
 begin
   // Data entry checks.
   if edtServerName.Text = '' then exit;
@@ -164,6 +163,36 @@ begin
 
   if scmConnection.Connected then
   begin
+    // ---------------------------------------------------------------
+    // Does the SwimClubMeet database exist on MS SQLEXPRESS?
+    // (Considering a QueryDBVersion has been performed - redundant check?)
+    // ---------------------------------------------------------------
+    qryDBExists.Open;
+    if qryDBExists.Active then
+    begin
+      errCount := qryDBExists.FieldByName('Result').AsInteger;
+      qryDBExists.Close;
+      // return 1 if exists, 0 if it doesn't.
+      if not(errCount = 1) then
+      begin
+        // SwimClubMeet doesn't exists!
+        s := 'Unexpected error! SwimClubMeet wasn''t found.' + sLineBreak +
+          'The database must exists to perform updates!' + sLineBreak +
+          'Press EXIT when ready.';
+        MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
+        // single shot at building
+        btnUDB.Visible := false;
+        BuildDone := true;
+        fSelectedUDBConfig := nil;
+        btnSelectUpdate.Enabled := false;
+        Memo1.Lines.Add(s);
+        exit;
+      end;
+    end;
+  end;
+
+  if scmConnection.Connected then
+  begin
     // Read the current database version and display
     QueryDBVersion;
     lblDBCURR.Caption := IntToStr(FDBModel) + '.' + IntToStr(FDBVersion) + '.' +
@@ -172,14 +201,15 @@ begin
 
     if Assigned(fSelectedUDBConfig) then // AND CONNECTED
     begin
-      UpdateIsSyncedState;  // update fSynced.
+      UpdateIsSyncedState; // update fSynced.
       if not fIsSynced then
-            Memo1.Lines.Add('WARNING: The selected update doesn''t match the current version.');
+          Memo1.Lines.Add
+          ('WARNING: The selected update doesn''t match the current version.');
     end;
     Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL');
     Memo1.Lines.Add('ALWAYS backup your database before performing an update!' +
       sLineBreak);
-   end
+  end
   else
   begin
     Memo1.Lines.Add('Connection failed.' + sLineBreak);
@@ -191,7 +221,6 @@ begin
   actnDisconnectUpdate(self);
   actnConnectUpdate(self);
   actnSelectUpdate(self)
-
 
 end;
 
@@ -257,28 +286,28 @@ begin
   // ---------------------------------------------------------------
 {$IFDEF DEBUG}
   rootDIR := TPath.GetDocumentsPath + '\GitHub\SCM_ERStudio\' +
-    IncludeTrailingPathDelimiter(fUpdateScriptSubPath);
+    IncludeTrailingPathDelimiter(defSubPath);
 {$ELSE}
   // up to and including the colon or backslash .... SAFE
   rootDIR := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName))
-    + IncludeTrailingPathDelimiter(fUpdateScriptSubPath);
+    + IncludeTrailingPathDelimiter(fdefSubPath);
 {$IFEND}
-
   Memo1.Clear;
 
   // DOES PATH EXISTS?
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
   begin
     s := 'The build scripts sub-folder is missing!' + sLineBreak +
-      '(Default name : ''#EXEPATH#\UDB_SCRIPTS\''.)' + sLineBreak +
+      '(Default name : ''#EXEPATH#\'+ defSubPath +'''.)' + sLineBreak +
       'Cannot continue. Missing UDB system sub-folder.' + sLineBreak +
       'Press EXIT when ready.';
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // only one shot at building granted
     btnUDB.Visible := false;
     BuildDone := true;
-    Memo1.Lines.Add('ERROR: Missing UDB system sub-folder.') ;
-    Memo1.Lines.Add('Press EXIT when ready.');
+    fSelectedUDBConfig := nil;
+    btnSelectUpdate.Enabled := false;
+    Memo1.Lines.Add(s);
     exit;
   end;
 
@@ -287,7 +316,7 @@ begin
   dlg.RootPath := rootDIR;
   dlg.ConfigList := UDBConfigList;
   mr := dlg.ShowModal;
-  if IsPositiveResult(mr)then
+  if IsPositiveResult(mr) then
   begin
     if Assigned(dlg.SelectedConfig) then
     begin
@@ -308,10 +337,11 @@ begin
     // read the current DB's model.version.major.minor
     QueryDBVersion;
     // is the current DB version = UDBConfig version?
-    UpdateIsSyncedState;  // update fSynced
+    UpdateIsSyncedState; // update fSynced
     if not fIsSynced then
     begin
-      Memo1.Lines.Add('WARNING: The selected update doesn''t match the current version.');
+      Memo1.Lines.Add
+        ('WARNING: The selected update doesn''t match the current version.');
     end;
   end;
   Memo1.Lines.Add('READY ...');
@@ -362,50 +392,22 @@ end;
 // ---------------------------------------------------------------
 procedure TSCMUpdateDataBase.actnUDBExecute(Sender: TObject);
 var
-  s, FDir, verStrCURR, verStrIN: String;
-  errCount, errCode: Integer;
+  s, verStrCURR, verStrIN: String;
+  errCode: Integer;
   mr: TModalResult;
-  success, CntrlKeyPressed: Boolean;
+  success: Boolean;
+  SQLFolderPath: string;
 begin
 
   progressBar.Position := 0;
   progressBar.Min := 0;
   btnUDB.Visible := false;
-  CntrlKeyPressed := false;
   Memo1.Clear;
 
   // basic checks. (Some of these checks are covered by actnEDBUpdate.)
   if not scmConnection.Connected then exit;
   if not Assigned(fSelectedUDBConfig) then exit;
-  // ---------------------------------------------------------------
-  // H I D D E N  - O P T I O N A L   M E T H O D
-  // Get CNTRL keyboard state.
-  // ---------------------------------------------------------------
-  if ((GetKeyState(VK_CONTROL) AND 128) = 128) then CntrlKeyPressed := true;
-  // ---------------------------------------------------------------
-  // Does the SwimClubMeet database exist on MS SQLEXPRESS?
-  // (Considering a QueryDBVersion has been performed - redundant check?)
-  // ---------------------------------------------------------------
-  qryDBExists.Open;
-  if qryDBExists.Active then
-  begin
-    errCount := qryDBExists.FieldByName('Result').AsInteger;
-    qryDBExists.Close;
-    // non zero value indicates SwimClubMeet already exists.
-    if not(errCount = 1) then
-    begin
-      // SwimClubMeet doesn't exists!
-      s := 'Unexpected error!' + sLineBreak +
-        'The SwimClubMeet database must exists!' + sLineBreak +
-        'Press EXIT when ready.';
-      MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
-      // single shot at building
-      btnUDB.Visible := false;
-      BuildDone := true;
-      Memo1.Lines.Add(s);
-      exit;
-    end;
-  end;
+
   // ---------------------------------------------------------------
   // Does the commandline app sqlcmd.exe exist?
   // ---------------------------------------------------------------
@@ -420,6 +422,8 @@ begin
     // single shot at building
     btnUDB.Visible := false;
     BuildDone := true;
+    fSelectedUDBConfig := nil;
+    btnSelectUpdate.Enabled := false;
     Memo1.Lines.Add(s);
     exit;
   end;
@@ -436,106 +440,51 @@ begin
   // ---------------------------------------------------------------
   if not fIsSynced then
   begin
-    if not CntrlKeyPressed then  // ignore this check if cntrl was pressed.
+    s := 'The current version of this SCM database is ' + verStrCURR + '.' +
+      sLineBreak + 'The selected update''s base version is, ' + verStrIN + '.' +
+      sLineBreak +
+      'These don''t match and running the update might cause serious issues.' +
+      sLineBreak + 'Do you want to run this update?';
+    mr := MessageDlg(s, TMsgDlgType.mtWarning, [mbYes, mbNo], 0, mbNo);
+    if IsNegativeResult(mr) then
     begin
-      s := 'The current version of this SCM database is ' + verStrCURR + '.'
-        + sLineBreak +
-        'The selected update''s base version is, ' + verStrIN + '.'
-        + sLineBreak +
-        'These don''t match and running the update might cause serious issues.'
-        + sLineBreak +
-        'Do you want to run this update?';
-      mr := MessageDlg(s, TMsgDlgType.mtWarning, [mbYes, mbNo], 0, mbNo);
-      if IsNegativeResult(mr) then
-      begin
-        BuildDone := false;
-        Memo1.Lines.Add(s);
-        Memo1.Lines.Add('READY ...');
-        exit;
-      end;
-    end;
-  end;
-
-  // ----------------------------------------------------------------
-  // O P T I O N A L   M E T H O D  - RUN ANY SCRIPTS
-  // LET THE USER LOCATE A FOLDER WITH SQL SCRIPTS
-  // ----------------------------------------------------------------
-  if CntrlKeyPressed then
-  begin
-    // DEFAULT STARTING DIRECTORY
-    FDir := GetEnvironmentVariable('USERPROFILE') + '\Documents\';
-    FSQLPath := '';
-
-    // DEPRECIATED : Only Vista and above can run TFileOpenDialog
-    // if Win32MajorVersion >= 6 then
-
-    // PROMPT USER TO SELECT A FOLDER CONTAINING SCRIPTS FOR UPDATE
-    // NOTE: doesn't return trailing path delimeter
-    with TFileOpenDialog.Create(nil) do
-      try
-        Title := 'Select SCM Update Folder ...';
-        Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem];
-        // YMMV
-        OkButtonLabel := 'Select';
-        DefaultFolder := FDir;
-        FileName := FDir;
-        if Execute then FSQLPath := FileName;
-      finally
-        Free;
-      end;
-
-    if FSQLPath.IsEmpty then
-    begin
-      // user aborted + permit retry
-      btnUDB.Visible := true;
-      Memo1.Clear;
+      BuildDone := false;
+      Memo1.Lines.Add(s);
       Memo1.Lines.Add('READY ...');
       exit;
     end;
-  end
-  else
-  // ---------------------------------------------------------------
-  // Does the DEFAULT update folder
-  // (containing SQL update files) exist?
-  // ---------------------------------------------------------------
-  begin
-    (*
-      {$IFDEF DEBUG}
-      FSQLPath := TPath.GetDocumentsPath + '\GitHub\SCM_ERStudio\UDB_SCRIPTS\';
-      {$ELSE}
-      // up to and including the colon or backslash .... SAFE
-      FSQLPath := ExtractFilePath(Application.ExeName) + fUpdateScriptSubPath;
-      {$IFEND}
-    *)
-    FSQLPath := IncludeTrailingPathDelimiter(ExtractFilePath(fSelectedUDBConfig.FileName));
+  end;
 
-    if not TDirectory.Exists(FSQLPath) then
-    begin
-      s := 'The update folder ' + fUpdateScriptSubPath + ' wasn''t found.';
-      MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0, mbOk);
-      // single shot at building
-      btnUDB.Visible := false;
-      BuildDone := true;
-      Memo1.Lines.Add(s);
-      exit;
-    end;
+  // ---------------------------------------------------------------
+  // get the path to the folder holding the SQL scripts
+  // ---------------------------------------------------------------
+  SQLFolderPath := IncludeTrailingPathDelimiter
+    (ExtractFilePath(fSelectedUDBConfig.FileName));
+
+  if not TDirectory.Exists(SQLFolderPath) then
+  begin
+    s := 'Unexpected error. Directory doesn''t exist.' + sLineBreak +
+      'The update folder ' + SQLFolderPath + ' wasn''t found.';
+    MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0, mbOk);
+    // single shot at building
+    btnUDB.Visible := false;
+    BuildDone := true;
+    fSelectedUDBConfig := nil;
+    btnSelectUpdate.Enabled := false;
+    Memo1.Lines.Add(s);
+    exit;
   end;
 
   // F I N A L   C H E C K S .
-
-  ExecuteProcessScripts(FSQLPath);
+  // note: after update, the applucation has to be restarted to do
+  // another update ....
+  ExecuteProcessScripts(SQLFolderPath);
   Memo1.Lines.Add('Update completed ...');
   btnUDB.Visible := false;
   BuildDone := true;
+  fSelectedUDBConfig := nil;
+  btnSelectUpdate.Enabled := false;
   Memo1.Lines.Add('Press EXIT when ready.');
-
-  // WARNING:  O P T I O N A L   M E T H O D .
-  if CntrlKeyPressed then
-  begin
-    s := 'Consider checking [SwimClubMeet].[dbo].SCMSystem. ' + sLineBreak +
-      'Ensure that the version information is correct.';
-    MessageDlg(s, TMsgDlgType.mtInformation, [mbOk], 0);
-  end;
 
 end;
 
@@ -619,7 +568,7 @@ var
 begin
   // Look for SQL file to execute ...
   sl := TStringList.Create;
-  GetFileList(FSQLPath, '*.SQL', sl);
+  GetFileList(SQLPath, '*.SQL', sl);
   sl.Sort; // Perform an ANSI sort
 
   // Are there SQL files in this directory?
@@ -629,6 +578,7 @@ begin
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // update button remains visible - try again ....
     btnUDB.Visible := true;
+    BuildDone := false;
     vimgChkBoxDBIN.Visible := false;
     FreeAndNil(sl);
     Memo1.Lines.Add(s);
@@ -689,7 +639,7 @@ begin
       // * Version number of SwimClubMeet DataBase *
       // Only read this table if not errors reported.
       QueryDBVersion();
-      s := 'SwimClubMeet database version control ' +  GetCURRVersionStr();;
+      s := 'SwimClubMeet database version control ' + GetCURRVersionStr();;
       Memo1.Lines.Add(s);
     end
     else
@@ -740,7 +690,6 @@ begin
     NOTE: -S [protocol:]server[instance_name][,port]
     NOTE: -E is not specified because it is the default and sqlcmd
     connects to the default instance by using Windows Authentication.
-    TODO: include fullname and password authentication.
     NOTE: -i input file
     NOTE: -V (uppercase V)  error_severity_level. Any error above value
     will be reported
@@ -837,12 +786,14 @@ begin
   lblDBCURR.Visible := false;
   lblPreRelease.Visible := false;
   fIsSynced := false;
-  // default script folder - intiated by INNO installer.
-  fUpdateScriptSubPath := 'UDB_SCRIPTS\';
   // hide password entry.
   sbtnPassword.Down := true;
   edtPassword.PasswordChar := '*';
-  // A custom class to hold all the info on each update variant.
+  // TUDBConfig - Object to hold all the info on each update variant.
+  // Info extracted from the file, UDBConfig.ini
+  // Object includes the SQL folder path
+  fSelectedUDBConfig := nil;
+  // A custom collection. Contains TUDBConfig objects
   UDBConfigList := TObjectList<TUDBConfig>.Create(true); // owns object
 
 end;
@@ -968,10 +919,8 @@ end;
 
 procedure TSCMUpdateDataBase.sbtnPasswordClick(Sender: TObject);
 begin
-  if TSpeedButton(Sender).Down then
-    edtPassword.PasswordChar := '*'
-  else
-    edtPassword.PasswordChar := #0;
+  if TSpeedButton(Sender).Down then edtPassword.PasswordChar := '*'
+  else edtPassword.PasswordChar := #0;
 end;
 
 {$REGION 'SIMPLE LOAD ROUTINES FOR TEMPORY FDAC CONNECTION'}
@@ -1028,7 +977,6 @@ begin
   if scmConnection.Connected Then SaveConfigData;
 end;
 
-
 procedure TSCMUpdateDataBase.SimpleSaveSettingString(ASection, AName,
   AValue: String);
 var
@@ -1044,8 +992,6 @@ begin
 
 end;
 
-
 {$ENDREGION}
-
 
 end.

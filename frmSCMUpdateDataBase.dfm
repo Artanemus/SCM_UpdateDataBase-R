@@ -15777,7 +15777,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       TabOrder = 1
       OnClick = btnCancelClick
     end
-    object btnSelectFolder: TButton
+    object btnSelectUpdate: TButton
       Left = 131
       Top = 7
       Width = 167
