@@ -1,9 +1,9 @@
-object UDBMsgBox: TUDBMsgBox
+object IsSyncedMsgBox: TIsSyncedMsgBox
   Left = 0
   Top = 0
-  Caption = 'Update DataBase ...'
+  Caption = 'Update compatability check...'
   ClientHeight = 202
-  ClientWidth = 497
+  ClientWidth = 397
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12770,17 +12770,20 @@ object UDBMsgBox: TUDBMsgBox
   TextHeight = 19
   object Label1: TLabel
     Left = 135
-    Top = 47
-    Width = 330
-    Height = 19
-    Caption = 'READY : Found #SCRIPTCOUNT# to execute.'
+    Top = 18
+    Width = 240
+    Height = 57
+    Caption = 
+      'Running this update script on the current database is likely to ' +
+      'cause serious issues..'
+    WordWrap = True
   end
   object Label2: TLabel
     Left = 135
-    Top = 72
-    Width = 302
+    Top = 99
+    Width = 220
     Height = 19
-    Caption = 'Do you want to update the SCM DataBase?'
+    Caption = 'Do you want to do the update?'
   end
   object Image1: TImage
     Left = 8
@@ -14045,30 +14048,35 @@ object UDBMsgBox: TUDBMsgBox
   object Panel1: TPanel
     Left = 0
     Top = 151
-    Width = 497
+    Width = 397
     Height = 51
     Align = alBottom
     BevelEdges = [beTop]
     BevelKind = bkFlat
     BevelOuter = bvNone
     TabOrder = 0
-    object btnCancel: TButton
-      Left = 163
+    ExplicitTop = 150
+    ExplicitWidth = 493
+    object btnNo: TButton
+      Left = 113
       Top = 8
       Width = 75
       Height = 33
-      Caption = 'Cancel'
-      ModalResult = 2
+      Caption = 'No'
+      Default = True
+      ModalResult = 7
       TabOrder = 0
-      OnClick = btnCancelClick
+      OnClick = btnNoClick
     end
-    object btnOK: TButton
-      Left = 259
+    object btnYes: TButton
+      Left = 209
       Top = 8
       Width = 75
       Height = 33
-      Caption = 'OK'
+      Caption = 'Yes'
+      ModalResult = 6
       TabOrder = 1
+      OnClick = btnYesClick
     end
   end
 end

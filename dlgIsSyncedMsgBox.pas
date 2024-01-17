@@ -1,4 +1,4 @@
-unit dlgUDBMsgBox;
+unit dlgIsSyncedMsgBox;
 
 interface
 
@@ -7,14 +7,15 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls;
 
 type
-  TUDBMsgBox = class(TForm)
+  TIsSyncedMsgBox = class(TForm)
     Panel1: TPanel;
-    btnCancel: TButton;
-    btnOK: TButton;
+    btnNo: TButton;
+    btnYes: TButton;
     Label1: TLabel;
     Label2: TLabel;
     Image1: TImage;
-    procedure btnCancelClick(Sender: TObject);
+    procedure btnNoClick(Sender: TObject);
+    procedure btnYesClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
@@ -25,19 +26,25 @@ type
   end;
 
 var
-  UDBMsgBox: TUDBMsgBox;
+  IsSyncedMsgBox: TIsSyncedMsgBox;
 
 implementation
 
 {$R *.dfm}
 
-procedure TUDBMsgBox.btnCancelClick(Sender: TObject);
+procedure TIsSyncedMsgBox.btnNoClick(Sender: TObject);
 begin
-  ModalResult := btnCancel.ModalResult;
+  ModalResult := btnNo.ModalResult;
   Close;
 end;
 
-procedure TUDBMsgBox.FormCreate(Sender: TObject);
+procedure TIsSyncedMsgBox.btnYesClick(Sender: TObject);
+begin
+  ModalResult := btnYes.ModalResult;
+  Close;
+end;
+
+procedure TIsSyncedMsgBox.FormCreate(Sender: TObject);
 begin
   FFolderPath := '';
 end;

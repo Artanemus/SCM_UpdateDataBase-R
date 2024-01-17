@@ -119,8 +119,8 @@
             <Form>SCMUpdateDataBase</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="dlgUDBMsgBox.pas">
-            <Form>UDBMsgBox</Form>
+        <DCCReference Include="dlgIsSyncedMsgBox.pas">
+            <Form>IsSyncedMsgBox</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="utilVersion.pas"/>

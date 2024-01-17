@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
   FireDAC.Phys, FireDAC.VCLUI.Wait, Data.DB, FireDAC.Comp.Client,
@@ -88,7 +88,8 @@ type
     OUT_Version = 1;
     SCMCONFIGFILENAME = 'SCMConfig.ini';
 
-    // get the current version as discovered by QueryDBVersion
+    // get a text string of the current database
+    // version as discovered by QueryDBVersion
     function GetCURRVersionStr: string;
 
   var
@@ -107,7 +108,8 @@ type
     UDBConfigList: TObjectList<TUDBConfig>;
     fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
-    procedure UpdateIsSyncedState;
+    procedure AssertIsSyncedState;
+    function IsSyncedMessage(ShowDlg: boolean = false): TModalResult;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
       WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
       var ErrorCode: Integer): Boolean;
@@ -140,7 +142,7 @@ const
 implementation
 
 uses System.IOUtils, System.Types, System.IniFiles,
-  System.UITypes, utilVersion;
+  System.UITypes, utilVersion, Vcl.Dialogs;
 
 {$R *.dfm}
 
@@ -158,14 +160,13 @@ begin
   SimpleMakeTemporyFDConnection(edtServerName.Text, edtUser.Text,
     edtPassword.Text, chkbUseOSAuthentication.Checked);
 
-  // Display info
+  // Clear display text
   Memo1.Clear;
 
   if scmConnection.Connected then
   begin
     // ---------------------------------------------------------------
     // Does the SwimClubMeet database exist on MS SQLEXPRESS?
-    // (Considering a QueryDBVersion has been performed - redundant check?)
     // ---------------------------------------------------------------
     qryDBExists.Open;
     if qryDBExists.Active then
@@ -181,10 +182,10 @@ begin
           'Press EXIT when ready.';
         MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
         // single shot at building
-        btnUDB.Visible := false;
+        // Display states are handled by TAction.Update ....
         BuildDone := true;
+        vimgChkBoxDBOUT.Visible := false;
         fSelectedUDBConfig := nil;
-        btnSelectUpdate.Enabled := false;
         Memo1.Lines.Add(s);
         exit;
       end;
@@ -193,20 +194,16 @@ begin
 
   if scmConnection.Connected then
   begin
-    // Read the current database version and display
+    // Read the current database version.
+    // this procedure is called
+    // (1)on connection
+    // (2) after completion of a successful update.
     QueryDBVersion;
-    lblDBCURR.Caption := IntToStr(FDBModel) + '.' + IntToStr(FDBVersion) + '.' +
-      IntToStr(FDBMajor) + '.' + IntToStr(FDBMinor);
-    lblDBCURR.Visible := true;
-
-    if Assigned(fSelectedUDBConfig) then // AND CONNECTED
-    begin
-      UpdateIsSyncedState; // update fSynced.
-      if not fIsSynced then
-          Memo1.Lines.Add
-          ('WARNING: The selected update doesn''t match the current version.');
-    end;
+    // Display on left of screen the version number.
+    lblDBCURR.Caption := GetCURRVersionStr;
+    IsSyncedMessage; // Memo IsSynced WARNING message, if mismatch found.
     Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL');
+    Memo1.Lines.Add('SwimClubMeet database version. ' + lblDBCURR.Caption);
     Memo1.Lines.Add('ALWAYS backup your database before performing an update!' +
       sLineBreak);
   end
@@ -214,6 +211,7 @@ begin
   begin
     Memo1.Lines.Add('Connection failed.' + sLineBreak);
     Memo1.Lines.Add('Check your input settings.' + sLineBreak);
+    lblDBCURR.Caption := '';
   end;
   Memo1.Lines.Add('READY ...');
 
@@ -281,6 +279,9 @@ var
   rootDIR, s: string;
   mr: TModalResult;
 begin
+
+  fSelectedUDBConfig := nil;
+
   // DEFAULT:
   // BUILDMEACLUB USES THE SUB-FOLDER WITHIN IT'S EXE PATH
   // ---------------------------------------------------------------
@@ -298,15 +299,15 @@ begin
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
   begin
     s := 'The build scripts sub-folder is missing!' + sLineBreak +
-      '(Default name : ''#EXEPATH#\'+ defSubPath +'''.)' + sLineBreak +
+      '(Default name : ''#EXEPATH#\' + defSubPath + '''.)' + sLineBreak +
       'Cannot continue. Missing UDB system sub-folder.' + sLineBreak +
       'Press EXIT when ready.';
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // only one shot at building granted
-    btnUDB.Visible := false;
+    // Display states are handled by TAction.Update ....
     BuildDone := true;
+    vimgChkBoxDBOUT.Visible := false;
     fSelectedUDBConfig := nil;
-    btnSelectUpdate.Enabled := false;
     Memo1.Lines.Add(s);
     exit;
   end;
@@ -319,31 +320,27 @@ begin
   if IsPositiveResult(mr) then
   begin
     if Assigned(dlg.SelectedConfig) then
-    begin
-      fSelectedUDBConfig := dlg.SelectedConfig;
-      s := ExtractFilePath(fSelectedUDBConfig.GetScriptPath);
-      if System.SysUtils.DirectoryExists(s) then
-      begin
-        lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
-        lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
-      end;
-    end;
+        fSelectedUDBConfig := dlg.SelectedConfig;
   end;
   dlg.Free;
 
-  // After each select execute - check sync.
-  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
+  if Assigned(fSelectedUDBConfig) then
   begin
-    // read the current DB's model.version.major.minor
-    QueryDBVersion;
-    // is the current DB version = UDBConfig version?
-    UpdateIsSyncedState; // update fSynced
-    if not fIsSynced then
-    begin
-      Memo1.Lines.Add
-        ('WARNING: The selected update doesn''t match the current version.');
-    end;
+    lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
+    lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
+    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false
+    else lblPreRelease.Visible := true;
+  end
+  else
+  begin
+    lblDBIN.Caption := '';
+    lblDBOUT.Caption := '';
+    lblPreRelease.Visible := false;
   end;
+
+  // After each selection - display a warning IsSynced message, if required.
+  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
+      IsSyncedMessage; // Memo IsSynced WARNING message, if mismatch found.
   Memo1.Lines.Add('READY ...');
 
 end;
@@ -356,8 +353,8 @@ begin
     begin
       if fIsSynced then
       begin
-        if vimgChkBoxDBIN.ImageName <> 'check_box' then
-            vimgChkBoxDBIN.ImageName := 'check_box';
+        if vimgChkBoxDBIN.ImageName <> 'GreenCheckBox' then
+            vimgChkBoxDBIN.ImageName := 'GreenCheckBox';
       end
       else
       begin
@@ -365,12 +362,10 @@ begin
             vimgChkBoxDBIN.ImageName := 'RedCross';
       end;
       vimgChkBoxDBIN.Visible := true;
-      if BuildDone then vimgChkBoxDBOUT.Visible := true;
     end
     else
     begin
       vimgChkBoxDBIN.Visible := false;
-      vimgChkBoxDBOUT.Visible := false;
     end;
 
     lblDBIN.Visible := true;
@@ -379,9 +374,10 @@ begin
   end
   else
   begin
-    lblDBIN.Visible := true;
-    lblDBOUT.Visible := true;
+    lblDBIN.Visible := false;
+    lblDBOUT.Visible := false;
     lblPreRelease.Visible := false;
+    vimgChkBoxDBIN.Visible := false;
   end;
 
 end;
@@ -392,11 +388,11 @@ end;
 // ---------------------------------------------------------------
 procedure TSCMUpdateDataBase.actnUDBExecute(Sender: TObject);
 var
-  s, verStrCURR, verStrIN: String;
+  s: String;
   errCode: Integer;
-  mr: TModalResult;
   success: Boolean;
   SQLFolderPath: string;
+  mr : TModalResult;
 begin
 
   progressBar.Position := 0;
@@ -420,39 +416,26 @@ begin
       'Press EXIT when ready.';
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // single shot at building
-    btnUDB.Visible := false;
+    // Display states are handled by TAction.Update ....
     BuildDone := true;
+    vimgChkBoxDBOUT.Visible := false;
     fSelectedUDBConfig := nil;
-    btnSelectUpdate.Enabled := false;
     Memo1.Lines.Add(s);
     exit;
   end;
-  // ---------------------------------------------------------------
-  // update fIsSynced state. Current version = UDBConfig DBIN
-  // ---------------------------------------------------------------
-  UpdateIsSyncedState;
-  verStrCURR := GetCURRVersionStr();
-  verStrIN := fSelectedUDBConfig.GetVersionStr(udbIN);
 
   // ---------------------------------------------------------------
-  // Does the current DB 'SCM version' sync with this update app.
-  // THIS ISN'T CONSIDERED AN ERROR
+  // DEFAULT: Show memo IsSynced WARNING message (if mismatch found).
   // ---------------------------------------------------------------
-  if not fIsSynced then
+  mr := IsSyncedMessage(true);   // Show dialogue. Returns mrYes or mrNo
+  // User answers mrNo to 'So you want to perform the update'.
+  if IsNegativeResult(mr) then
   begin
-    s := 'The current version of this SCM database is ' + verStrCURR + '.' +
-      sLineBreak + 'The selected update''s base version is, ' + verStrIN + '.' +
-      sLineBreak +
-      'These don''t match and running the update might cause serious issues.' +
-      sLineBreak + 'Do you want to run this update?';
-    mr := MessageDlg(s, TMsgDlgType.mtWarning, [mbYes, mbNo], 0, mbNo);
-    if IsNegativeResult(mr) then
-    begin
-      BuildDone := false;
-      Memo1.Lines.Add(s);
-      Memo1.Lines.Add('READY ...');
-      exit;
-    end;
+    BuildDone := true;
+    vimgChkBoxDBOUT.Visible := false;
+    fSelectedUDBConfig := nil;
+    Memo1.Lines.Add(s);
+    exit;
   end;
 
   // ---------------------------------------------------------------
@@ -469,6 +452,7 @@ begin
     // single shot at building
     btnUDB.Visible := false;
     BuildDone := true;
+    vimgChkBoxDBOUT.Visible := false;
     fSelectedUDBConfig := nil;
     btnSelectUpdate.Enabled := false;
     Memo1.Lines.Add(s);
@@ -503,12 +487,13 @@ begin
   Close;
 end;
 
-procedure TSCMUpdateDataBase.UpdateIsSyncedState;
+procedure TSCMUpdateDataBase.AssertIsSyncedState;
 begin
   fIsSynced := false;
+  // On connection the procedure QueryDBVersion is called.
+  // This routine is dependant on the procedure being called.
   if Assigned(fSelectedUDBConfig) and scmConnection.Connected then
   begin
-    QueryDBVersion;
     if (FDBVersion = fSelectedUDBConfig.VersionIN) AND
       (FDBMajor = fSelectedUDBConfig.MajorIN) AND
       (FDBMinor = fSelectedUDBConfig.MinorIN) then fIsSynced := true;
@@ -576,10 +561,10 @@ begin
   begin
     s := 'No build scripts to run!' + sLineBreak + 'READY ...';
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
-    // update button remains visible - try again ....
-    btnUDB.Visible := true;
+    // Display states are handled by TAction.Update ....
     BuildDone := false;
-    vimgChkBoxDBIN.Visible := false;
+    vimgChkBoxDBOUT.Visible := false;
+    fSelectedUDBConfig := nil;
     FreeAndNil(sl);
     Memo1.Lines.Add(s);
     exit;
@@ -627,31 +612,39 @@ begin
       progressBar.Position := progressBar.Position + 1;
     end;
     Memo1.Lines.Add(sLineBreak + 'FINISHED');
-    vimgChkBoxDBOUT.ImageIndex := 2; // GREEN CHECK MARK
-    vimgChkBoxDBOUT.Visible := true;
     if errCount = 0 then
     begin
+      vimgChkBoxDBOUT.ImageName := 'GreenCheckBox'; // GREEN CHECK MARK
+      vimgChkBoxDBOUT.Visible := true;
       Memo1.Lines.Add('ExecuteProcess completed without errors.' + sLineBreak);
       Memo1.Lines.Add
         ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.'
         + sLineBreak);
 
-      // * Version number of SwimClubMeet DataBase *
-      // Only read this table if not errors reported.
+      // Read the current database version.
+      // This procedure is called
+      // (1) on connection
+      // (2) after completion of a successful update.
       QueryDBVersion();
-      s := 'SwimClubMeet database version control ' + GetCURRVersionStr();;
+      // Display on left of screen the version number.
+      lblDBCURR.Caption := GetCURRVersionStr();
+      s := 'SwimClubMeet database version (after update). ' + lblDBCURR.Caption;
       Memo1.Lines.Add(s);
     end
     else
     begin
+      vimgChkBoxDBOUT.ImageName := 'RedCheckBox'; // RED CHECK MARK
+      vimgChkBoxDBOUT.Visible := true;
       Memo1.Lines.Add('ExecuteProcess reported: ' + IntToStr(errCount) +
         ' errors.' + sLineBreak);
       Memo1.Lines.Add('View the SCM_UpdateDataBase.log for sqlcmd.exe errors.' +
         sLineBreak);
+      lblDBCURR.Caption := '';
     end;
     // only one shot at building granted
     btnUDB.Visible := false;
     BuildDone := true;
+    btnSelectUpdate.Enabled := false;
     progressBar.Visible := false;
 
     // finished with database - do a disconnect? (But it hides the Memo1 cntrl)
@@ -829,6 +822,45 @@ begin
   for fn in List do sl.Add(fn);
 end;
 
+function TSCMUpdateDataBase.IsSyncedMessage(ShowDlg: boolean = false): TModalResult;
+var
+  verStrCURR: string;
+  verStrIN: string;
+  sl: TStringList;
+  mr: TModalResult;
+begin
+  // ---------------------------------------------------------------
+  // Ensure QueryDBVersion() was called (occurs on connection).
+  // THIS IS A WARNING. It's not considered and error and the user is
+  // permitted to execute the update!
+  // ---------------------------------------------------------------
+  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
+  begin
+    //
+    AssertIsSyncedState; // assert IsSynced state.
+    // reads local fields, populated after call to QueryDBVersion()
+    verStrCURR := GetCURRVersionStr();
+    // reads object TUSBConfig after call to actnSelectExecute
+    verStrIN := fSelectedUDBConfig.GetVersionStr(udbIN);
+
+    if not fIsSynced then
+    begin
+      sl := TStringList.Create;
+      sl.Add('The current version of this SCM database is ' + verStrCURR + '.');
+      sl.Add('The selected update''s base version is, ' + verStrIN + '.');
+      sl.Add('The two don''t match and running the update is likely to cause a serious issues.');
+      Memo1.Lines.Add(sl.Text);
+      Memo1.Lines.Add('READY ...');
+
+      if ShowDlg then
+        sl.Add('Do you want to perform the update?');
+        result :=  MessageDlg(sl.Text, mtWarning, [mbYes, mbNo], 0, mbNo);
+      sl.Free;
+    end;
+  end;
+
+end;
+
 procedure TSCMUpdateDataBase.LoadConfigData;
 var
   ASection: string;
@@ -891,10 +923,8 @@ begin
       begin
         FDBMinor := fld.AsInteger;
       end;
-
     end;
   end;
-
 end;
 
 procedure TSCMUpdateDataBase.SaveConfigData;

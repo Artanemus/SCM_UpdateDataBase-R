@@ -8,8 +8,8 @@
     <Transaction>2022/03/06 18:07:18.000.343,C:\PROJECTS\SCM_Update_P\SCM_Update.dproj=C:\PROJECTS\SCM_Update_P\SCM_Update_P.dproj</Transaction>
     <Transaction>2022/03/06 18:14:45.000.216,C:\PROJECTS\SCM_Update_P\SCM_UpdateDB.dproj=C:\PROJECTS\SCM_Update_P\SCM_Update.dproj</Transaction>
     <Transaction>2022/03/28 13:39:38.000.335,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\SCM_UpdateDB.dproj=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\SCM_UpdateDataBase.dproj</Transaction>
-    <Transaction>2022/03/28 13:40:34.000.819,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdate.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdateDataBase.pas</Transaction>
     <Transaction>2022/03/28 13:40:34.000.819,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdate.dfm=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdateDataBase.dfm</Transaction>
+    <Transaction>2022/03/28 13:40:34.000.819,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdate.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\frmSCMUpdateDataBase.pas</Transaction>
     <Transaction>2022/04/08 11:32:52.000.812,=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\dlgUpdateMsgBox.pas</Transaction>
     <Transaction>2022/04/08 11:33:01.000.718,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\dlgUpdateMsgBox.dfm=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\dlgUDBMsgBox.dfm</Transaction>
     <Transaction>2022/04/08 11:33:01.000.718,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\dlgUpdateMsgBox.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase\dlgUDBMsgBox.pas</Transaction>
@@ -21,12 +21,14 @@
     <Transaction>2024/01/10 15:20:03.000.627,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgSelectUpdateFolder.dfm=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgSelectFolder.dfm</Transaction>
     <Transaction>2024/01/11 13:19:48.000.437,=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\Unit1.pas</Transaction>
     <Transaction>2024/01/11 13:26:58.000.392,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\Unit1.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\UDBConfig.pas</Transaction>
+    <Transaction>2024/01/17 12:25:59.944,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgIsSyncedMsgBox.pas=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgUDBMsgBox.pas</Transaction>
+    <Transaction>2024/01/17 12:25:59.944,C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgIsSyncedMsgBox.dfm=C:\Users\Ben\Documents\GitHub\SCM_UpdateDataBase-R\dlgUDBMsgBox.dfm</Transaction>
   </Transactions>
 	<ProjectSortOrder AutoSort="0" SortType="0">
     <File Path="dlgSelectUpdateFolder.pas"/>
     <File Path="dlgSelectUpdateFolder.dfm"/>
-    <File Path="dlgUDBMsgBox.pas"/>
-    <File Path="dlgUDBMsgBox.dfm"/>
+    <File Path="dlgIsSyncedMsgBox.pas"/>
+    <File Path="dlgIsSyncedMsgBox.dfm"/>
     <File Path="frmSCMUpdateDataBase.pas"/>
     <File Path="frmSCMUpdateDataBase.dfm"/>
     <File Path="UDBConfig.pas"/>

@@ -12801,7 +12801,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = 2
-      ImageName = 'check_box'
+      ImageName = 'GreenCheckBox'
     end
     object vimgChkBoxDBOUT: TVirtualImage
       Left = 616
@@ -12812,7 +12812,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = 2
-      ImageName = 'check_box'
+      ImageName = 'GreenCheckBox'
     end
     object lblDBIN: TLabel
       Left = 442
@@ -16479,7 +16479,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
           end>
       end
       item
-        Name = 'check_box'
+        Name = 'GreenCheckBox'
         SourceImages = <
           item
             Image.Data = {

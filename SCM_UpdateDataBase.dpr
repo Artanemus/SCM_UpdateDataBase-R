@@ -3,7 +3,7 @@ program SCM_UpdateDataBase;
 uses
   Vcl.Forms,
   frmSCMUpdateDataBase in 'frmSCMUpdateDataBase.pas' {SCMUpdateDataBase},
-  dlgUDBMsgBox in 'dlgUDBMsgBox.pas' {UDBMsgBox},
+  dlgIsSyncedMsgBox in 'dlgIsSyncedMsgBox.pas' {IsSyncedMsgBox},
   utilVersion in 'utilVersion.pas',
   Vcl.Themes,
   Vcl.Styles,
