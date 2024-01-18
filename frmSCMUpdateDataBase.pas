@@ -109,7 +109,7 @@ type
     fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
     procedure AssertIsSyncedState;
-    function IsSyncedMessage(ShowDlg: boolean = false): TModalResult;
+    function IsSyncedMessage(ShowDlg: Boolean = false): TModalResult;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
       WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
       var ErrorCode: Integer): Boolean;
@@ -184,8 +184,6 @@ begin
         // single shot at building
         // Display states are handled by TAction.Update ....
         BuildDone := true;
-        vimgChkBoxDBOUT.Visible := false;
-        fSelectedUDBConfig := nil;
         Memo1.Lines.Add(s);
         exit;
       end;
@@ -194,18 +192,20 @@ begin
 
   if scmConnection.Connected then
   begin
-    // Read the current database version.
-    // this procedure is called
-    // (1)on connection
+    // QueryDBVersion :: Read the current database version.
+    // This procedure is called
+    // (1) on connection
     // (2) after completion of a successful update.
     QueryDBVersion;
     // Display on left of screen the version number.
     lblDBCURR.Caption := GetCURRVersionStr;
-    IsSyncedMessage; // Memo IsSynced WARNING message, if mismatch found.
     Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL');
-    Memo1.Lines.Add('SwimClubMeet database version. ' + lblDBCURR.Caption);
     Memo1.Lines.Add('ALWAYS backup your database before performing an update!' +
       sLineBreak);
+
+    // Memo IsSynced WARNING message, if mismatch found.
+    IsSyncedMessage(false);
+
   end
   else
   begin
@@ -215,15 +215,17 @@ begin
   end;
   Memo1.Lines.Add('READY ...');
 
-  // Update button states in groupbox1.
-  actnDisconnectUpdate(self);
-  actnConnectUpdate(self);
-  actnSelectUpdate(self)
+  // State of the Display
+  actnDisconnect.Update; // btnDisconnect Visibility
+  // actnConnect.Update;
+  // actnSelect.Update;
+  actnUDB.Update; // btnUDB Enabled state.
 
 end;
 
 procedure TSCMUpdateDataBase.actnConnectUpdate(Sender: TObject);
 begin
+  // buttons enable state handled by actnUDBUpdate
   // update TCONTROL visibility
   if scmConnection.Connected then
   begin
@@ -243,8 +245,6 @@ begin
     lblCurrDBVer.Visible := false;
   end;
 
-  if BuildDone then // only one build per application running
-      btnUDB.Visible := false;
 end;
 
 procedure TSCMUpdateDataBase.actnDisconnectExecute(Sender: TObject);
@@ -255,6 +255,7 @@ begin
   Memo1.Lines.Add('Disconnected ...' + sLineBreak);
   // REQUIRED: update button state.
   actnConnectUpdate(self);
+  BuildDone := false;
 end;
 
 procedure TSCMUpdateDataBase.actnDisconnectUpdate(Sender: TObject);
@@ -270,7 +271,7 @@ begin
     btnUDB.Visible := false; // no connection ... no updating.
   end;
   if BuildDone then // only one build per application running
-      btnUDB.Visible := false;
+      btnUDB.Enabled := false;
 end;
 
 procedure TSCMUpdateDataBase.actnSelectExecute(Sender: TObject);
@@ -280,7 +281,7 @@ var
   mr: TModalResult;
 begin
 
-  fSelectedUDBConfig := nil;
+  // fSelectedUDBConfig := nil;
 
   // DEFAULT:
   // BUILDMEACLUB USES THE SUB-FOLDER WITHIN IT'S EXE PATH
@@ -306,8 +307,6 @@ begin
     // only one shot at building granted
     // Display states are handled by TAction.Update ....
     BuildDone := true;
-    vimgChkBoxDBOUT.Visible := false;
-    fSelectedUDBConfig := nil;
     Memo1.Lines.Add(s);
     exit;
   end;
@@ -340,13 +339,22 @@ begin
 
   // After each selection - display a warning IsSynced message, if required.
   if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
-      IsSyncedMessage; // Memo IsSynced WARNING message, if mismatch found.
+      IsSyncedMessage(false);
+  // Memo IsSynced WARNING message, if mismatch found.
   Memo1.Lines.Add('READY ...');
 
 end;
 
 procedure TSCMUpdateDataBase.actnSelectUpdate(Sender: TObject);
 begin
+  // if scmConnection.Connected then
+  // btnSelectUpdate.Visible := true
+  // else
+  // begin
+  // btnSelectUpdate.Visible := false;
+  // if Assigned(fSelectedUDBConfig) then fSelectedUDBConfig := nil;
+  // end;
+
   if Assigned(fSelectedUDBConfig) then
   begin
     if scmConnection.Connected then
@@ -380,6 +388,9 @@ begin
     vimgChkBoxDBIN.Visible := false;
   end;
 
+  if BuildDone then btnSelectUpdate.Enabled := false
+  else btnSelectUpdate.Enabled := true;
+
 end;
 
 // ---------------------------------------------------------------
@@ -392,12 +403,11 @@ var
   errCode: Integer;
   success: Boolean;
   SQLFolderPath: string;
-  mr : TModalResult;
+  mr: TModalResult;
 begin
 
   progressBar.Position := 0;
   progressBar.Min := 0;
-  btnUDB.Visible := false;
   Memo1.Clear;
 
   // basic checks. (Some of these checks are covered by actnEDBUpdate.)
@@ -418,25 +428,17 @@ begin
     // single shot at building
     // Display states are handled by TAction.Update ....
     BuildDone := true;
-    vimgChkBoxDBOUT.Visible := false;
-    fSelectedUDBConfig := nil;
     Memo1.Lines.Add(s);
+    actnConnect.Update;
     exit;
   end;
 
   // ---------------------------------------------------------------
   // DEFAULT: Show memo IsSynced WARNING message (if mismatch found).
   // ---------------------------------------------------------------
-  mr := IsSyncedMessage(true);   // Show dialogue. Returns mrYes or mrNo
+  mr := IsSyncedMessage(true); // Show dialogue. Returns mrYes or mrNo
   // User answers mrNo to 'So you want to perform the update'.
-  if IsNegativeResult(mr) then
-  begin
-    BuildDone := true;
-    vimgChkBoxDBOUT.Visible := false;
-    fSelectedUDBConfig := nil;
-    Memo1.Lines.Add(s);
-    exit;
-  end;
+  if IsNegativeResult(mr) then exit;
 
   // ---------------------------------------------------------------
   // get the path to the folder holding the SQL scripts
@@ -450,34 +452,33 @@ begin
       'The update folder ' + SQLFolderPath + ' wasn''t found.';
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0, mbOk);
     // single shot at building
-    btnUDB.Visible := false;
     BuildDone := true;
-    vimgChkBoxDBOUT.Visible := false;
-    fSelectedUDBConfig := nil;
-    btnSelectUpdate.Enabled := false;
     Memo1.Lines.Add(s);
+    // ActionList1.UpdateAction(actnConnect);
+    actnConnect.Update;
+    // actnConnectUpdate(Self);
     exit;
   end;
 
   // F I N A L   C H E C K S .
-  // note: after update, the applucation has to be restarted to do
-  // another update ....
+  // set the BuildDone state only if scripts were found.
   ExecuteProcessScripts(SQLFolderPath);
   Memo1.Lines.Add('Update completed ...');
-  btnUDB.Visible := false;
-  BuildDone := true;
-  fSelectedUDBConfig := nil;
-  btnSelectUpdate.Enabled := false;
   Memo1.Lines.Add('Press EXIT when ready.');
+
+  actnConnect.Update(); // btnUDB.visible state
+  actnSelect.Update();
+  actnUDB.Update(); // btnUDB.enabled state determined by boolean BuildDone
 
 end;
 
 procedure TSCMUpdateDataBase.actnUDBUpdate(Sender: TObject);
 begin
-  if BuildDone then // only one build per application running
-      btnUDB.Visible := false;
+  // visibility of btnUDB is handle bu actnConnectUpdate
   if not Assigned(fSelectedUDBConfig) then btnUDB.Enabled := false
   else btnUDB.Enabled := true;
+  if BuildDone then // only one build per application running
+      btnUDB.Enabled := false;
 end;
 
 procedure TSCMUpdateDataBase.btnCancelClick(Sender: TObject);
@@ -556,6 +557,8 @@ begin
   GetFileList(SQLPath, '*.SQL', sl);
   sl.Sort; // Perform an ANSI sort
 
+  vimgChkBoxDBOUT.Visible := false;
+
   // Are there SQL files in this directory?
   if sl.Count = 0 then
   begin
@@ -563,8 +566,6 @@ begin
     MessageDlg(s, TMsgDlgType.mtError, [mbOk], 0);
     // Display states are handled by TAction.Update ....
     BuildDone := false;
-    vimgChkBoxDBOUT.Visible := false;
-    fSelectedUDBConfig := nil;
     FreeAndNil(sl);
     Memo1.Lines.Add(s);
     exit;
@@ -642,18 +643,16 @@ begin
       lblDBCURR.Caption := '';
     end;
     // only one shot at building granted
-    btnUDB.Visible := false;
     BuildDone := true;
-    btnSelectUpdate.Enabled := false;
     progressBar.Visible := false;
-
+    actnConnect.Update;
     // finished with database - do a disconnect? (But it hides the Memo1 cntrl)
     Memo1.Lines.Add(sLineBreak +
       'UpdateDataBase has completed. Press EXIT when ready.');
   end
   else
     // we had scripts ... but user didn't do a build
-      btnUDB.Visible := true;
+      ;
 
   FreeAndNil(sl);
 
@@ -822,13 +821,14 @@ begin
   for fn in List do sl.Add(fn);
 end;
 
-function TSCMUpdateDataBase.IsSyncedMessage(ShowDlg: boolean = false): TModalResult;
+function TSCMUpdateDataBase.IsSyncedMessage(ShowDlg: Boolean = false)
+  : TModalResult;
 var
   verStrCURR: string;
   verStrIN: string;
   sl: TStringList;
-  mr: TModalResult;
 begin
+  Result := mrNo;
   // ---------------------------------------------------------------
   // Ensure QueryDBVersion() was called (occurs on connection).
   // THIS IS A WARNING. It's not considered and error and the user is
@@ -846,15 +846,18 @@ begin
     if not fIsSynced then
     begin
       sl := TStringList.Create;
-      sl.Add('The current version of this SCM database is ' + verStrCURR + '.');
+      sl.Add('The current version of this SwimClubMeet database is ' +
+        verStrCURR + '.');
       sl.Add('The selected update''s base version is, ' + verStrIN + '.');
-      sl.Add('The two don''t match and running the update is likely to cause a serious issues.');
+      sl.Add('The two don''t match and running the update isn''t recommended.');
       Memo1.Lines.Add(sl.Text);
-      Memo1.Lines.Add('READY ...');
 
       if ShowDlg then
+      begin
         sl.Add('Do you want to perform the update?');
-        result :=  MessageDlg(sl.Text, mtWarning, [mbYes, mbNo], 0, mbNo);
+        Result := MessageDlg(sl.Text, mtWarning, [mbYes, mbNo], 0, mbNo);
+      end;
+
       sl.Free;
     end;
   end;

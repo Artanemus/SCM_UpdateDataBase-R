@@ -15716,13 +15716,13 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
           ' MS SQLEXPRESS server.'
         ''
         
-          'The '#39#39'Update DataBase'#39#39' button will not be VISIBLE until a conne' +
-          'ction to the DB Server is'
-        'established.'
+          'The '#39'Update DataBase'#39' and '#39'Select Update'#39' buttons will not be VI' +
+          'SIBLE until a connection to the '
+        'DB Server is established.'
         ''
         
-          'The '#39'Update DataBase'#39#39' button will not be ENABLED until an updat' +
-          'e variant is selected.'
+          'The '#39'Update DataBase'#39' button will not be ENABLED until an update' +
+          ' variant is selected.'
         ''
         
           'ALWAYS make a backup of your database before running this utilit' +
