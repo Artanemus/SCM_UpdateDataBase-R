@@ -292,7 +292,7 @@ begin
 {$ELSE}
   // up to and including the colon or backslash .... SAFE
   rootDIR := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName))
-    + IncludeTrailingPathDelimiter(fdefSubPath);
+    + IncludeTrailingPathDelimiter(defSubPath);
 {$IFEND}
   Memo1.Clear;
 
@@ -437,8 +437,13 @@ begin
   // DEFAULT: Show memo IsSynced WARNING message (if mismatch found).
   // ---------------------------------------------------------------
   mr := IsSyncedMessage(true); // Show dialogue. Returns mrYes or mrNo
+
   // User answers mrNo to 'So you want to perform the update'.
-  if IsNegativeResult(mr) then exit;
+  if IsNegativeResult(mr) then
+  begin
+    Memo1.Lines.Add('READY ...');
+    exit;
+  end;
 
   // ---------------------------------------------------------------
   // get the path to the folder holding the SQL scripts
@@ -463,8 +468,6 @@ begin
   // F I N A L   C H E C K S .
   // set the BuildDone state only if scripts were found.
   ExecuteProcessScripts(SQLFolderPath);
-  Memo1.Lines.Add('Update completed ...');
-  Memo1.Lines.Add('Press EXIT when ready.');
 
   actnConnect.Update(); // btnUDB.visible state
   actnSelect.Update();
@@ -474,11 +477,22 @@ end;
 
 procedure TSCMUpdateDataBase.actnUDBUpdate(Sender: TObject);
 begin
-  // visibility of btnUDB is handle bu actnConnectUpdate
-  if not Assigned(fSelectedUDBConfig) then btnUDB.Enabled := false
-  else btnUDB.Enabled := true;
-  if BuildDone then // only one build per application running
-      btnUDB.Enabled := false;
+  // stops UI flickering if enable state is tested before changing.
+    // NOTE: visibility of btnUDB is handle bu actnConnectUpdate
+  if BuildDone then // re-run the application to build again
+  begin
+    if btnUDB.Enabled then btnUDB.Enabled := false;
+    exit;
+  end;
+
+  if not Assigned(fSelectedUDBConfig) then
+  begin
+    if btnUDB.Enabled then btnUDB.Enabled := false;
+    exit;
+  end;
+
+  if not btnUDB.Enabled then  btnUDB.Enabled := true;
+
 end;
 
 procedure TSCMUpdateDataBase.btnCancelClick(Sender: TObject);
@@ -617,10 +631,10 @@ begin
     begin
       vimgChkBoxDBOUT.ImageName := 'GreenCheckBox'; // GREEN CHECK MARK
       vimgChkBoxDBOUT.Visible := true;
-      Memo1.Lines.Add('ExecuteProcess completed without errors.' + sLineBreak);
+      Memo1.Lines.Add('ExecuteProcess completed without errors.');
       Memo1.Lines.Add
         ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.'
-        + sLineBreak);
+        );
 
       // Read the current database version.
       // This procedure is called
@@ -637,7 +651,7 @@ begin
       vimgChkBoxDBOUT.ImageName := 'RedCheckBox'; // RED CHECK MARK
       vimgChkBoxDBOUT.Visible := true;
       Memo1.Lines.Add('ExecuteProcess reported: ' + IntToStr(errCount) +
-        ' errors.' + sLineBreak);
+        ' errors.');
       Memo1.Lines.Add('View the SCM_UpdateDataBase.log for sqlcmd.exe errors.' +
         sLineBreak);
       lblDBCURR.Caption := '';
@@ -828,7 +842,7 @@ var
   verStrIN: string;
   sl: TStringList;
 begin
-  Result := mrNo;
+  Result := mrNone;
   // ---------------------------------------------------------------
   // Ensure QueryDBVersion() was called (occurs on connection).
   // THIS IS A WARNING. It's not considered and error and the user is
@@ -848,7 +862,7 @@ begin
       sl := TStringList.Create;
       sl.Add('The current version of this SwimClubMeet database is ' +
         verStrCURR + '.');
-      sl.Add('The selected update''s base version is, ' + verStrIN + '.');
+      sl.Add('The selected update''s base version is ' + verStrIN + '.');
       sl.Add('The two don''t match and running the update isn''t recommended.');
       Memo1.Lines.Add(sl.Text);
 
