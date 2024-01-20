@@ -12785,7 +12785,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Left = 442
       Top = 72
       Width = 247
-      Height = 284
+      Height = 348
       ImageCollection = ImageCollection1
       ImageWidth = 0
       ImageHeight = 0
@@ -12794,7 +12794,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object vimgChkBoxDBIN: TVirtualImage
       Left = 616
-      Top = 72
+      Top = 98
       Width = 65
       Height = 59
       ImageCollection = ImageCollection1
@@ -12805,7 +12805,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object vimgChkBoxDBOUT: TVirtualImage
       Left = 616
-      Top = 234
+      Top = 260
       Width = 65
       Height = 59
       ImageCollection = ImageCollection1
@@ -12816,7 +12816,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object lblDBIN: TLabel
       Left = 442
-      Top = 107
+      Top = 137
       Width = 239
       Height = 54
       Alignment = taCenter
@@ -12833,7 +12833,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object lblDBOUT: TLabel
       Left = 442
-      Top = 267
+      Top = 298
       Width = 239
       Height = 54
       Alignment = taCenter
@@ -12848,7 +12848,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object lblPreRelease: TLabel
       Left = 442
-      Top = 317
+      Top = 360
       Width = 247
       Height = 25
       Alignment = taCenter

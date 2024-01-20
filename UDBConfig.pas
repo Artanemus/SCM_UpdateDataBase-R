@@ -13,6 +13,8 @@ type
     { private declarations }
     fDBName: string; // =SwimClubMeet
     fIsRelease: boolean; // =false
+    fIsPatch: boolean;
+    fPatchNum: integer;
     fDescription: string; // ="v1.1.5.1 to v1.1.5.2"
     fNotes: string; // ="FINA disqualification codes."
 
@@ -40,6 +42,8 @@ type
     function GetScriptPath():string;
 
     property IsRelease: boolean read fIsRelease;
+    property IsPatch: boolean read fIsPatch;
+    property PatchNum: integer read fPatchNum;
     property FileName: string read fFileName write fFileName;
     property BaseIN: integer read fBaseIn;
     property VersionIN: integer read fVersionIn;
@@ -56,6 +60,8 @@ constructor TUDBConfig.Create;
 begin
   inherited;
   fIsRelease := false; // the configuration update is pre-release by default;
+  fIsPatch :=  false;
+  fPatchNum := 0;
   fBaseOut := 0;
   fVersionOut := 1;
   fMajorOut := 0;
@@ -106,6 +112,8 @@ begin
   try
     fDBName := ini.ReadString('UDB', 'DatabaseName', '');
     fIsRelease := ini.ReadBool('UDB', 'IsRelease', False);
+    fIsPatch := ini.ReadBool('UDB', 'IsPatch', False);
+    fPatchNum := ini.ReadInteger('UDB', 'PatchNum', 0);
     fDescription := ini.ReadString('UDB', 'Description', '');
     fNotes := ini.ReadString('UDB', 'Notes', '');
     fBaseIn := ini.ReadInteger('UDBIN', 'Base', 1);
@@ -129,6 +137,8 @@ begin
   try
     ini.WriteString('UDB', 'DatabaseName', fDBName);
     ini.WriteBool('UDB', 'IsRelease', fIsRelease);
+    ini.WriteBool('UDB', 'IsPatch', fIsPatch);
+    ini.WriteInteger('UD', 'Base', fPatchNum);
     ini.WriteString('UDB', 'Description', fDescription);
     ini.WriteString('UDB', 'Notes', fNotes);
     ini.WriteInteger('UDBIN', 'Base', fBaseIn);

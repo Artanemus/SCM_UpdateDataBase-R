@@ -4,22 +4,23 @@ object SelectUpdateFolder: TSelectUpdateFolder
   BorderStyle = bsDialog
   Caption = 'List of Updates'
   ClientHeight = 540
-  ClientWidth = 384
+  ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -16
   Font.Name = 'Segoe UI'
   Font.Style = []
+  KeyPreview = True
   Position = poOwnerFormCenter
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 21
   object Panel1: TPanel
     Left = 0
     Top = 41
-    Width = 384
+    Width = 430
     Height = 433
     Align = alClient
     BevelOuter = bvNone
@@ -30,7 +31,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
       AlignWithMargins = True
       Left = 10
       Top = 10
-      Width = 364
+      Width = 410
       Height = 413
       Margins.Left = 10
       Margins.Top = 10
@@ -61,7 +62,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
   object Panel2: TPanel
     Left = 0
     Top = 474
-    Width = 384
+    Width = 430
     Height = 66
     Align = alBottom
     BevelEdges = [beTop]
@@ -71,7 +72,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
     ExplicitTop = 473
     ExplicitWidth = 380
     object btnCancel: TButton
-      Left = 81
+      Left = 104
       Top = 15
       Width = 108
       Height = 35
@@ -81,7 +82,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
       OnClick = btnCancelClick
     end
     object btnOk: TButton
-      Left = 195
+      Left = 218
       Top = 15
       Width = 108
       Height = 35
@@ -94,7 +95,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
   object Panel3: TPanel
     Left = 0
     Top = 0
-    Width = 384
+    Width = 430
     Height = 41
     Align = alTop
     BevelOuter = bvNone

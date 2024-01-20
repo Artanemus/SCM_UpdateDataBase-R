@@ -327,14 +327,27 @@ begin
   begin
     lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
     lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
-    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false
-    else lblPreRelease.Visible := true;
+    lblPreRelease.Caption := '';
+    s := '';
+    if not fSelectedUDBConfig.IsRelease then
+      lblPreRelease.Caption := 'Pre-Release'
+    else
+      lblPreRelease.Caption := '';
+
+    if fSelectedUDBConfig.IsPatch then
+    begin
+      s := 'Patch ' + IntToStr(fSelectedUDBConfig.PatchNum);
+      if length(lblPreRelease.Caption) > 0 then s := ' ' + s;
+      lblPreRelease.Caption := lblPreRelease.Caption + s;
+    end;
+
+
   end
   else
   begin
     lblDBIN.Caption := '';
     lblDBOUT.Caption := '';
-    lblPreRelease.Visible := false;
+    lblPreRelease.Caption := '';
   end;
 
   // After each selection - display a warning IsSynced message, if required.
@@ -378,13 +391,15 @@ begin
 
     lblDBIN.Visible := true;
     lblDBOUT.Visible := true;
-    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
+//    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
+//    if not fSelectedUDBConfig.IsPatch then lblPatch.Visible := false;
   end
   else
   begin
     lblDBIN.Visible := false;
     lblDBOUT.Visible := false;
-    lblPreRelease.Visible := false;
+//    lblPreRelease.Visible := false;
+//    lblPatch.Visible := false;
     vimgChkBoxDBIN.Visible := false;
   end;
 
@@ -790,8 +805,10 @@ begin
   lblDBOUT.Caption := '';
   lblDBCURR.Caption := '';
   lblDBCURR.Visible := false;
-  lblPreRelease.Visible := false;
   fIsSynced := false;
+  // init after SelectUpdate.Execute
+  lblPreRelease.Caption := '';
+
   // hide password entry.
   sbtnPassword.Down := true;
   edtPassword.PasswordChar := '*';
