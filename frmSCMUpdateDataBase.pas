@@ -506,6 +506,12 @@ begin
     exit;
   end;
 
+  if not fIsSynced then
+  begin
+    if btnUDB.Enabled then btnUDB.Enabled := false;
+    exit;
+  end;
+
   if not btnUDB.Enabled then  btnUDB.Enabled := true;
 
 end;
