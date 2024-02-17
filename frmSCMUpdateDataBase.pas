@@ -59,6 +59,10 @@ type
     vimgChkBoxDBOUT: TVirtualImage;
     VirtualImage1: TVirtualImage;
     VirtualImageList1: TVirtualImageList;
+    shpPatchIn: TShape;
+    lblPatchIn: TLabel;
+    lblPatchOut: TLabel;
+    shpPatchOut: TShape;
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure actnDisconnectExecute(Sender: TObject);
@@ -328,15 +332,18 @@ begin
     lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
     lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
     lblPreRelease.Caption := '';
+    Memo1.Lines.Add('Notes on selected version :');
+    Memo1.Lines.Add(fSelectedUDBConfig.Notes);
+    Memo1.Lines.Add('');
     s := '';
     if not fSelectedUDBConfig.IsRelease then
       lblPreRelease.Caption := 'Pre-Release'
     else
-      lblPreRelease.Caption := '';
+      lblPreRelease.Caption := 'Release';
 
     if fSelectedUDBConfig.IsPatch then
     begin
-      s := 'Patch ' + IntToStr(fSelectedUDBConfig.PatchNum);
+      s := 'Patch ' + IntToStr(fSelectedUDBConfig.PatchIn);
       if length(lblPreRelease.Caption) > 0 then s := ' ' + s;
       lblPreRelease.Caption := lblPreRelease.Caption + s;
     end;

@@ -17,11 +17,14 @@ type
     Panel2: TPanel;
     Panel3: TPanel;
     ListBox1: TListBox;
+    pnlNotes: TPanel;
+    lblNotes: TLabel;
     procedure btnCancelClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormShow(Sender: TObject);
+    procedure ListBox1Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
   private
     { Private declarations }
@@ -144,14 +147,26 @@ begin
   for UDBConfig in ConfigList do
   begin
     // create checkbox caption
-    s := UDBConfig.GetVersionStr(udbIN) + ' > ' +
-      UDBConfig.GetVersionStr(udbOUT);
+//    s := UDBConfig.GetVersionStr(udbIN) + ' > ' +
+//      UDBConfig.GetVersionStr(udbOUT);
+    s := UDBConfig.Description;
     if UDBConfig.IsRelease = false then
-      s := s + ' Pre-Release';
+      s := s + ' Pre-Release'
+    else
+      s := s + ' Release';
     if UDBConfig.IsPatch = true then
-      s := s + ' Patch ' + IntToStr(UDBConfig.PatchNum);
+      s := s + ' Patch ';
     ListBox1.Items.AddObject(s, UDBConfig);
   end;
+end;
+
+procedure TSelectUpdateFolder.ListBox1Click(Sender: TObject);
+var
+aConfig: TUDBConfig;
+begin
+    aConfig := TUDBConfig(ListBox1.Items.Objects
+      [ListBox1.ItemIndex]);
+  lblNotes.Caption := aConfig.Notes;
 end;
 
 procedure TSelectUpdateFolder.ListBox1DblClick(Sender: TObject);

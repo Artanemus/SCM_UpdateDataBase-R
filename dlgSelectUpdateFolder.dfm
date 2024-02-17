@@ -3,7 +3,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
   Top = 0
   BorderStyle = bsDialog
   Caption = 'List of Updates'
-  ClientHeight = 540
+  ClientHeight = 734
   ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -21,18 +21,17 @@ object SelectUpdateFolder: TSelectUpdateFolder
     Left = 0
     Top = 41
     Width = 430
-    Height = 433
+    Height = 543
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 380
-    ExplicitHeight = 432
+    ExplicitHeight = 520
     object ListBox1: TListBox
       AlignWithMargins = True
       Left = 10
       Top = 10
       Width = 410
-      Height = 413
+      Height = 523
       Margins.Left = 10
       Margins.Top = 10
       Margins.Right = 10
@@ -43,10 +42,10 @@ object SelectUpdateFolder: TSelectUpdateFolder
       ExtendedSelect = False
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -24
+      Font.Height = -19
       Font.Name = 'Segoe UI'
       Font.Style = [fsBold]
-      ItemHeight = 32
+      ItemHeight = 25
       Items.Strings = (
         '1.0.0.0'
         '1.0.0.2')
@@ -54,14 +53,13 @@ object SelectUpdateFolder: TSelectUpdateFolder
       Sorted = True
       TabOrder = 0
       StyleElements = [seClient, seBorder]
+      OnClick = ListBox1Click
       OnDblClick = ListBox1DblClick
-      ExplicitWidth = 360
-      ExplicitHeight = 412
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 474
+    Top = 668
     Width = 430
     Height = 66
     Align = alBottom
@@ -70,7 +68,7 @@ object SelectUpdateFolder: TSelectUpdateFolder
     BevelOuter = bvNone
     TabOrder = 1
     ExplicitTop = 473
-    ExplicitWidth = 380
+    ExplicitWidth = 426
     object btnCancel: TButton
       Left = 104
       Top = 15
@@ -101,6 +99,33 @@ object SelectUpdateFolder: TSelectUpdateFolder
     BevelOuter = bvNone
     Caption = 'Select an update...'
     TabOrder = 2
-    ExplicitWidth = 380
+    ExplicitWidth = 426
+  end
+  object pnlNotes: TPanel
+    Left = 0
+    Top = 584
+    Width = 430
+    Height = 84
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 3
+    object lblNotes: TLabel
+      Left = 0
+      Top = 0
+      Width = 430
+      Height = 84
+      Align = alClient
+      Alignment = taCenter
+      Caption = 'lblNotes'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      WordWrap = True
+      ExplicitWidth = 49
+      ExplicitHeight = 17
+    end
   end
 end

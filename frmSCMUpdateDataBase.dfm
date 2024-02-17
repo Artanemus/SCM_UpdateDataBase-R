@@ -12782,10 +12782,10 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     TabOrder = 0
     ExplicitWidth = 706
     object VirtualImage1: TVirtualImage
-      Left = 442
-      Top = 72
+      Left = 434
+      Top = 70
       Width = 247
-      Height = 348
+      Height = 317
       ImageCollection = ImageCollection1
       ImageWidth = 0
       ImageHeight = 0
@@ -12794,7 +12794,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object vimgChkBoxDBIN: TVirtualImage
       Left = 616
-      Top = 98
+      Top = 64
       Width = 65
       Height = 59
       ImageCollection = ImageCollection1
@@ -12805,7 +12805,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object vimgChkBoxDBOUT: TVirtualImage
       Left = 616
-      Top = 260
+      Top = 228
       Width = 65
       Height = 59
       ImageCollection = ImageCollection1
@@ -12815,8 +12815,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       ImageName = 'GreenCheckBox'
     end
     object lblDBIN: TLabel
-      Left = 442
-      Top = 137
+      Left = 438
+      Top = 119
       Width = 239
       Height = 54
       Alignment = taCenter
@@ -12832,8 +12832,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       ParentFont = False
     end
     object lblDBOUT: TLabel
-      Left = 442
-      Top = 298
+      Left = 438
+      Top = 281
       Width = 239
       Height = 54
       Alignment = taCenter
@@ -12847,8 +12847,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       ParentFont = False
     end
     object lblPreRelease: TLabel
-      Left = 442
-      Top = 360
+      Left = 438
+      Top = 332
       Width = 247
       Height = 25
       Alignment = taCenter
@@ -12859,6 +12859,56 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Font.Height = -19
       Font.Name = 'Segoe UI'
       Font.Style = []
+      ParentFont = False
+    end
+    object shpPatchIn: TShape
+      Left = 467
+      Top = 88
+      Width = 39
+      Height = 30
+      Brush.Color = 2594447
+      Pen.Width = 2
+    end
+    object lblPatchIn: TLabel
+      Left = 472
+      Top = 92
+      Width = 29
+      Height = 21
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '00'
+      Color = clBtnFace
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentColor = False
+      ParentFont = False
+    end
+    object shpPatchOut: TShape
+      Left = 467
+      Top = 248
+      Width = 39
+      Height = 30
+      Brush.Color = 2388632
+      Pen.Width = 2
+    end
+    object lblPatchOut: TLabel
+      Left = 472
+      Top = 253
+      Width = 29
+      Height = 21
+      Alignment = taCenter
+      AutoSize = False
+      Caption = '00'
+      Color = clBtnFace
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentColor = False
       ParentFont = False
     end
     object GroupBox1: TGroupBox
@@ -12911,7 +12961,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
         Left = 218
         Top = 294
         Width = 161
-        Height = 49
+        Height = 46
         Alignment = taCenter
         AutoSize = False
         Caption = '0.0.0.0'
