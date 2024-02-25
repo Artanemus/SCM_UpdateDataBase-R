@@ -12780,7 +12780,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 706
     object VirtualImage1: TVirtualImage
       Left = 434
       Top = 70
