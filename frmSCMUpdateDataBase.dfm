@@ -12780,6 +12780,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 706
     object VirtualImage1: TVirtualImage
       Left = 434
       Top = 70
@@ -12793,7 +12794,7 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     end
     object vimgChkBoxDBIN: TVirtualImage
       Left = 616
-      Top = 64
+      Top = 68
       Width = 65
       Height = 59
       ImageCollection = ImageCollection1

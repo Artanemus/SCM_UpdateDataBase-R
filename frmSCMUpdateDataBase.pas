@@ -12,7 +12,7 @@ uses
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
   FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, Vcl.ComCtrls,
   System.Actions, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImage, dlgSelectUpdateFolder, UDBConfig,
+  Vcl.VirtualImage, dlgSelectBuild, scmBuildConfig,
   System.Generics.Collections, Vcl.Buttons, System.ImageList, Vcl.ImgList,
   Vcl.VirtualImageList;
 
@@ -108,12 +108,13 @@ type
     FDBMinor: Integer;
     FDBModel: Integer;
     FDBVersion: Integer;
-    fSelectedUDBConfig: TUDBConfig; // reference to selected TUDBConfig objrct
-    UDBConfigList: TObjectList<TUDBConfig>;
+    fSelectedBuildConfig: TscmBuildConfig; // reference to selected TUDBConfig objrct
+    UDBConfigList: TObjectList<TscmBuildConfig>;
     fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
     procedure AssertIsSyncedState;
-    function IsSyncedMessage(ShowDlg: Boolean = false): TModalResult;
+    function IsSyncedMessage()
+  : TModalResult;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
       WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
       var ErrorCode: Integer): Boolean;
@@ -208,7 +209,7 @@ begin
       sLineBreak);
 
     // Memo IsSynced WARNING message, if mismatch found.
-    IsSyncedMessage(false);
+    IsSyncedMessage;
 
   end
   else
@@ -280,7 +281,7 @@ end;
 
 procedure TSCMUpdateDataBase.actnSelectExecute(Sender: TObject);
 var
-  dlg: TSelectUpdateFolder;
+  dlg: TSelectBuild;
   rootDIR, s: string;
   mr: TModalResult;
 begin
@@ -299,6 +300,11 @@ begin
     + IncludeTrailingPathDelimiter(defSubPath);
 {$IFEND}
   Memo1.Clear;
+    // CLEAR visibility of the patch information.
+    shpPatchIn.Visible := false;
+    shpPatchOut.Visible := false;
+    lblPatchIn.Visible := false;
+    lblPatchOut.Visible := false;
 
   // DOES PATH EXISTS?
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
@@ -316,34 +322,34 @@ begin
   end;
 
   // Let the user select a database update configuration.
-  dlg := TSelectUpdateFolder.Create(self);
+  dlg := TSelectBuild.Create(self);
   dlg.RootPath := rootDIR;
   dlg.ConfigList := UDBConfigList;
   mr := dlg.ShowModal;
   if IsPositiveResult(mr) then
   begin
     if Assigned(dlg.SelectedConfig) then
-        fSelectedUDBConfig := dlg.SelectedConfig;
+        fSelectedBuildConfig := dlg.SelectedConfig;
   end;
   dlg.Free;
 
-  if Assigned(fSelectedUDBConfig) then
+  if Assigned(fSelectedBuildConfig) then
   begin
-    lblDBIN.Caption := fSelectedUDBConfig.GetVersionStr(udbIN);
-    lblDBOUT.Caption := fSelectedUDBConfig.GetVersionStr(udbOUT);
+    lblDBIN.Caption := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvIN);
+    lblDBOUT.Caption := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvOUT);
     lblPreRelease.Caption := '';
     Memo1.Lines.Add('Notes on selected version :');
-    Memo1.Lines.Add(fSelectedUDBConfig.Notes);
+    Memo1.Lines.Add(fSelectedBuildConfig.Notes);
     Memo1.Lines.Add('');
     s := '';
-    if not fSelectedUDBConfig.IsRelease then
+    if not fSelectedBuildConfig.IsRelease then
       lblPreRelease.Caption := 'Pre-Release'
     else
       lblPreRelease.Caption := 'Release';
 
-    if fSelectedUDBConfig.IsPatch then
+    if fSelectedBuildConfig.IsPatch then
     begin
-      s := 'Patch ' + IntToStr(fSelectedUDBConfig.PatchIn);
+      s := 'Patch ' + IntToStr(fSelectedBuildConfig.PatchIn);
       if length(lblPreRelease.Caption) > 0 then s := ' ' + s;
       lblPreRelease.Caption := lblPreRelease.Caption + s;
     end;
@@ -358,10 +364,27 @@ begin
   end;
 
   // After each selection - display a warning IsSynced message, if required.
-  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
-      IsSyncedMessage(false);
+  IsSyncedMessage;
   // Memo IsSynced WARNING message, if mismatch found.
   Memo1.Lines.Add('READY ...');
+
+  if Assigned(fSelectedBuildConfig) then
+  begin
+    if fSelectedBuildConfig.IsPatch then
+    begin
+      // INIT visibility of the patch information.
+      if (fSelectedBuildConfig.PatchIn > 0) then
+        begin
+          shpPatchIn.Visible := true;
+          lblPatchIn.Visible := true;
+        end;
+      if (fSelectedBuildConfig.PatchOut > 0) then
+        begin
+          shpPatchOut.Visible := true;
+          lblPatchOut.Visible := true;
+        end;
+      end;
+  end;
 
 end;
 
@@ -375,7 +398,7 @@ begin
   // if Assigned(fSelectedUDBConfig) then fSelectedUDBConfig := nil;
   // end;
 
-  if Assigned(fSelectedUDBConfig) then
+  if Assigned(fSelectedBuildConfig) then
   begin
     if scmConnection.Connected then
     begin
@@ -434,7 +457,7 @@ begin
 
   // basic checks. (Some of these checks are covered by actnEDBUpdate.)
   if not scmConnection.Connected then exit;
-  if not Assigned(fSelectedUDBConfig) then exit;
+  if not Assigned(fSelectedBuildConfig) then exit;
 
   // ---------------------------------------------------------------
   // Does the commandline app sqlcmd.exe exist?
@@ -456,22 +479,17 @@ begin
   end;
 
   // ---------------------------------------------------------------
-  // DEFAULT: Show memo IsSynced WARNING message (if mismatch found).
+  // Display memo IsSynced WARNING message (if mismatch found).
   // ---------------------------------------------------------------
-  mr := IsSyncedMessage(true); // Show dialogue. Returns mrYes or mrNo
+  IsSyncedMessage;
+  if not fIsSynced then exit;
 
-  // User answers mrNo to 'So you want to perform the update'.
-  if IsNegativeResult(mr) then
-  begin
-    Memo1.Lines.Add('READY ...');
-    exit;
-  end;
 
   // ---------------------------------------------------------------
   // get the path to the folder holding the SQL scripts
   // ---------------------------------------------------------------
   SQLFolderPath := IncludeTrailingPathDelimiter
-    (ExtractFilePath(fSelectedUDBConfig.FileName));
+    (ExtractFilePath(fSelectedBuildConfig.FileName));
 
   if not TDirectory.Exists(SQLFolderPath) then
   begin
@@ -507,7 +525,7 @@ begin
     exit;
   end;
 
-  if not Assigned(fSelectedUDBConfig) then
+  if not Assigned(fSelectedBuildConfig) then
   begin
     if btnUDB.Enabled then btnUDB.Enabled := false;
     exit;
@@ -535,11 +553,11 @@ begin
   fIsSynced := false;
   // On connection the procedure QueryDBVersion is called.
   // This routine is dependant on the procedure being called.
-  if Assigned(fSelectedUDBConfig) and scmConnection.Connected then
+  if Assigned(fSelectedBuildConfig) and scmConnection.Connected then
   begin
-    if (FDBVersion = fSelectedUDBConfig.VersionIN) AND
-      (FDBMajor = fSelectedUDBConfig.MajorIN) AND
-      (FDBMinor = fSelectedUDBConfig.MinorIN) then fIsSynced := true;
+    if (FDBVersion = fSelectedBuildConfig.VersionIN) AND
+      (FDBMajor = fSelectedBuildConfig.MajorIN) AND
+      (FDBMinor = fSelectedBuildConfig.MinorIN) then fIsSynced := true;
   end;
 end;
 
@@ -828,9 +846,16 @@ begin
   // TUDBConfig - Object to hold all the info on each update variant.
   // Info extracted from the file, UDBConfig.ini
   // Object includes the SQL folder path
-  fSelectedUDBConfig := nil;
+  fSelectedBuildConfig := nil;
   // A custom collection. Contains TUDBConfig objects
-  UDBConfigList := TObjectList<TUDBConfig>.Create(true); // owns object
+  UDBConfigList := TObjectList<TscmBuildConfig>.Create(true); // owns object
+
+  // INIT visibility of the patch information.
+  shpPatchIn.Visible := false;
+  shpPatchOut.Visible := false;
+  lblPatchIn.Visible := false;
+  lblPatchOut.Visible := false;
+
 
 end;
 
@@ -865,7 +890,7 @@ begin
   for fn in List do sl.Add(fn);
 end;
 
-function TSCMUpdateDataBase.IsSyncedMessage(ShowDlg: Boolean = false)
+function TSCMUpdateDataBase.IsSyncedMessage()
   : TModalResult;
 var
   verStrCURR: string;
@@ -878,14 +903,14 @@ begin
   // THIS IS A WARNING. It's not considered and error and the user is
   // permitted to execute the update!
   // ---------------------------------------------------------------
-  if scmConnection.Connected and Assigned(fSelectedUDBConfig) then
+  if scmConnection.Connected and Assigned(fSelectedBuildConfig) then
   begin
     //
     AssertIsSyncedState; // assert IsSynced state.
     // reads local fields, populated after call to QueryDBVersion()
     verStrCURR := GetCURRVersionStr();
     // reads object TUSBConfig after call to actnSelectExecute
-    verStrIN := fSelectedUDBConfig.GetVersionStr(udbIN);
+    verStrIN := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvIN);
 
     if not fIsSynced then
     begin
@@ -893,15 +918,8 @@ begin
       sl.Add('The current version of this SwimClubMeet database is ' +
         verStrCURR + '.');
       sl.Add('The selected update''s base version is ' + verStrIN + '.');
-      sl.Add('The two don''t match and running the update isn''t recommended.');
+      sl.Add('The two must match. The update cannot be run.');
       Memo1.Lines.Add(sl.Text);
-
-      if ShowDlg then
-      begin
-        sl.Add('Do you want to perform the update?');
-        Result := MessageDlg(sl.Text, mtWarning, [mbYes, mbNo], 0, mbNo);
-      end;
-
       sl.Free;
     end;
   end;

@@ -127,11 +127,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="utilVersion.pas"/>
-        <DCCReference Include="dlgSelectUpdateFolder.pas">
-            <Form>SelectUpdateFolder</Form>
+        <DCCReference Include="..\SCM_SHARED\dlgSelectBuild.pas">
+            <Form>SelectBuild</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UDBConfig.pas"/>
+        <DCCReference Include="..\SCM_SHARED\scmBuildConfig.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
