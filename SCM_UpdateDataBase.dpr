@@ -4,11 +4,11 @@ uses
   Vcl.Forms,
   frmSCMUpdateDataBase in 'frmSCMUpdateDataBase.pas' {SCMUpdateDataBase},
   dlgIsSyncedMsgBox in 'dlgIsSyncedMsgBox.pas' {IsSyncedMsgBox},
-  utilVersion in 'utilVersion.pas',
   Vcl.Themes,
   Vcl.Styles,
   dlgSelectBuild in '..\SCM_SHARED\dlgSelectBuild.pas' {SelectBuild},
-  scmBuildConfig in '..\SCM_SHARED\scmBuildConfig.pas';
+  scmBuildConfig in '..\SCM_SHARED\scmBuildConfig.pas',
+  utilVersion in '..\SCM_SHARED\utilVersion.pas';
 
 {$R *.res}
 

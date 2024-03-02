@@ -126,12 +126,12 @@
             <Form>IsSyncedMsgBox</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="utilVersion.pas"/>
         <DCCReference Include="..\SCM_SHARED\dlgSelectBuild.pas">
             <Form>SelectBuild</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\SCM_SHARED\scmBuildConfig.pas"/>
+        <DCCReference Include="..\SCM_SHARED\utilVersion.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
