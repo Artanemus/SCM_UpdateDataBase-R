@@ -35,50 +35,6 @@ The application's memo-pad displays progress and any errors. Additionally, check
 
 ---
 
-![ScreenShot of UPDB after logging in.](ASSETS/Screenshot%202022-09-09%20113118.JPG)
+![ScreenShot of UPDB after logging in.](ASSETS/Screenshot%202024-03-10%20105909.JPG)
 
----
 
-## SCM UpdateDataBase_64bit_v1.5.1.0.exe 2023/02/23
-
-For users running database SCMSystem values: (1,1,5,0).
-
-> It takes your (1,1,5,0) database and turns it into (1,1,5,1)
-
-Any of these core application versions can run on this database.
-
-- SCM_SwimClubMeet_32bit_v1.5.4.0
-- SCM_SwimClubMeet_32bit_v1.5.3.0
-- SCM_SwimClubMeet_x32_v1.5.2.0
-- SCM_SwimClubMeet_x32_v1.5.1.0
-
-Notes on this update.
-
-- Fixes scalar function. `dbo.IsMemberNominated.UserDefinedFunction.sql`.
-- New field: `SwimClubMeet.dbo.Member.IsSwimmer` (BIT).
-- Sets DEFAULT on fields `IsArchived`, `IsActive` and `IsSwimmer` in SwimClubMeet.dbo.Member.
-- Re-index (changed field orders) in table `dbo.Member`. 
-- Repairs default values for fields IsArchived and IsActive on existing records in SwimClubMeet.dbo.Member. (If they read NULL.)
-- Updates SCMSystem values to: (1,1,5,1).
-
-Special note:
-
-After the update a temporary table with the name `Member_` followed by a large hash number will appear in the database. After testing, you may remove this table. It's also safe to leave it.
-
----
-
-## SCM UpdateDataBase_x64_v1.1.0.0.exe 09/09/2022
-
-***Who should use this update?***
-
->For use ONLY by early adopters of the SCM project.
-
-If you created your database by using SCM_BuildMeAClub_x64_v1.1.0.0 then you ***DON'T*** need this update! 😃.
-
-Notes on this update.
-
-- Takes a very old 1.0.0.0 version and bring it up to date.
-- It requires delivery of SQL scripts from the developer!
-- Updates SCMSystem values to: (1,1,5,0)
-
----
