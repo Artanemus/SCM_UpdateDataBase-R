@@ -448,7 +448,6 @@ var
   errCode: Integer;
   success: Boolean;
   SQLFolderPath: string;
-  mr: TModalResult;
 begin
 
   progressBar.Position := 0;
