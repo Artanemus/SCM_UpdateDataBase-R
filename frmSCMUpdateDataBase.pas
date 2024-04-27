@@ -108,13 +108,13 @@ type
     FDBMinor: Integer;
     FDBModel: Integer;
     FDBVersion: Integer;
-    fSelectedBuildConfig: TscmBuildConfig; // reference to selected TUDBConfig objrct
+    fSelectedBuildConfig: TscmBuildConfig;
+    // reference to selected TUDBConfig objrct
     UDBConfigList: TObjectList<TscmBuildConfig>;
     fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
     procedure AssertIsSyncedState;
-    function IsSyncedMessage()
-  : TModalResult;
+    function IsSyncedMessage(): TModalResult;
     function ExecuteProcess(const FileName, Params: string; Folder: string;
       WaitUntilTerminated, WaitUntilIdle, RunMinimized: Boolean;
       var ErrorCode: Integer): Boolean;
@@ -157,9 +157,11 @@ var
   s: string;
 begin
   // Data entry checks.
-  if edtServerName.Text = '' then exit;
+  if edtServerName.Text = '' then
+    exit;
   if not chkbUseOSAuthentication.Checked then
-    if edtUser.Text = '' then exit;
+    if edtUser.Text = '' then
+      exit;
 
   // Attempt a 'simple' connection to SQLEXPRESS
   SimpleMakeTemporyFDConnection(edtServerName.Text, edtUser.Text,
@@ -276,7 +278,7 @@ begin
     btnUDB.Visible := false; // no connection ... no updating.
   end;
   if BuildDone then // only one build per application running
-      btnUDB.Enabled := false;
+    btnUDB.Enabled := false;
 end;
 
 procedure TSCMUpdateDataBase.actnSelectExecute(Sender: TObject);
@@ -300,11 +302,11 @@ begin
     + IncludeTrailingPathDelimiter(defSubPath);
 {$IFEND}
   Memo1.Clear;
-    // CLEAR visibility of the patch information.
-    shpPatchIn.Visible := false;
-    shpPatchOut.Visible := false;
-    lblPatchIn.Visible := false;
-    lblPatchOut.Visible := false;
+  // CLEAR visibility of the patch information.
+  shpPatchIn.Visible := false;
+  shpPatchOut.Visible := false;
+  lblPatchIn.Visible := false;
+  lblPatchOut.Visible := false;
 
   // DOES PATH EXISTS?
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
@@ -329,14 +331,16 @@ begin
   if IsPositiveResult(mr) then
   begin
     if Assigned(dlg.SelectedConfig) then
-        fSelectedBuildConfig := dlg.SelectedConfig;
+      fSelectedBuildConfig := dlg.SelectedConfig;
   end;
   dlg.Free;
 
   if Assigned(fSelectedBuildConfig) then
   begin
-    lblDBIN.Caption := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvIN);
-    lblDBOUT.Caption := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvOUT);
+    lblDBIN.Caption := fSelectedBuildConfig.GetVersionStr
+      (TscmBuildVersion.bvIN);
+    lblDBOUT.Caption := fSelectedBuildConfig.GetVersionStr
+      (TscmBuildVersion.bvOUT);
     lblPreRelease.Caption := '';
     Memo1.Lines.Add('Notes on selected version :');
     Memo1.Lines.Add(fSelectedBuildConfig.Notes);
@@ -350,10 +354,10 @@ begin
     if fSelectedBuildConfig.IsPatch then
     begin
       s := 'Patch ' + IntToStr(fSelectedBuildConfig.PatchIn);
-      if length(lblPreRelease.Caption) > 0 then s := ' ' + s;
+      if length(lblPreRelease.Caption) > 0 then
+        s := ' ' + s;
       lblPreRelease.Caption := lblPreRelease.Caption + s;
     end;
-
 
   end
   else
@@ -374,16 +378,16 @@ begin
     begin
       // INIT visibility of the patch information.
       if (fSelectedBuildConfig.PatchIn > 0) then
-        begin
-          shpPatchIn.Visible := true;
-          lblPatchIn.Visible := true;
-        end;
-      if (fSelectedBuildConfig.PatchOut > 0) then
-        begin
-          shpPatchOut.Visible := true;
-          lblPatchOut.Visible := true;
-        end;
+      begin
+        shpPatchIn.Visible := true;
+        lblPatchIn.Visible := true;
       end;
+      if (fSelectedBuildConfig.PatchOut > 0) then
+      begin
+        shpPatchOut.Visible := true;
+        lblPatchOut.Visible := true;
+      end;
+    end;
   end;
 
 end;
@@ -405,12 +409,12 @@ begin
       if fIsSynced then
       begin
         if vimgChkBoxDBIN.ImageName <> 'GreenCheckBox' then
-            vimgChkBoxDBIN.ImageName := 'GreenCheckBox';
+          vimgChkBoxDBIN.ImageName := 'GreenCheckBox';
       end
       else
       begin
         if vimgChkBoxDBIN.ImageName <> 'RedCross' then
-            vimgChkBoxDBIN.ImageName := 'RedCross';
+          vimgChkBoxDBIN.ImageName := 'RedCross';
       end;
       vimgChkBoxDBIN.Visible := true;
     end
@@ -421,20 +425,22 @@ begin
 
     lblDBIN.Visible := true;
     lblDBOUT.Visible := true;
-//    if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
-//    if not fSelectedUDBConfig.IsPatch then lblPatch.Visible := false;
+    // if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
+    // if not fSelectedUDBConfig.IsPatch then lblPatch.Visible := false;
   end
   else
   begin
     lblDBIN.Visible := false;
     lblDBOUT.Visible := false;
-//    lblPreRelease.Visible := false;
-//    lblPatch.Visible := false;
+    // lblPreRelease.Visible := false;
+    // lblPatch.Visible := false;
     vimgChkBoxDBIN.Visible := false;
   end;
 
-  if BuildDone then btnSelectUpdate.Enabled := false
-  else btnSelectUpdate.Enabled := true;
+  if BuildDone then
+    btnSelectUpdate.Enabled := false
+  else
+    btnSelectUpdate.Enabled := true;
 
 end;
 
@@ -455,8 +461,10 @@ begin
   Memo1.Clear;
 
   // basic checks. (Some of these checks are covered by actnEDBUpdate.)
-  if not scmConnection.Connected then exit;
-  if not Assigned(fSelectedBuildConfig) then exit;
+  if not scmConnection.Connected then
+    exit;
+  if not Assigned(fSelectedBuildConfig) then
+    exit;
 
   // ---------------------------------------------------------------
   // Does the commandline app sqlcmd.exe exist?
@@ -481,8 +489,8 @@ begin
   // Display memo IsSynced WARNING message (if mismatch found).
   // ---------------------------------------------------------------
   IsSyncedMessage;
-  if not fIsSynced then exit;
-
+  if not fIsSynced then
+    exit;
 
   // ---------------------------------------------------------------
   // get the path to the folder holding the SQL scripts
@@ -517,26 +525,30 @@ end;
 procedure TSCMUpdateDataBase.actnUDBUpdate(Sender: TObject);
 begin
   // stops UI flickering if enable state is tested before changing.
-    // NOTE: visibility of btnUDB is handle bu actnConnectUpdate
+  // NOTE: visibility of btnUDB is handle bu actnConnectUpdate
   if BuildDone then // re-run the application to build again
   begin
-    if btnUDB.Enabled then btnUDB.Enabled := false;
+    if btnUDB.Enabled then
+      btnUDB.Enabled := false;
     exit;
   end;
 
   if not Assigned(fSelectedBuildConfig) then
   begin
-    if btnUDB.Enabled then btnUDB.Enabled := false;
+    if btnUDB.Enabled then
+      btnUDB.Enabled := false;
     exit;
   end;
 
   if not fIsSynced then
   begin
-    if btnUDB.Enabled then btnUDB.Enabled := false;
+    if btnUDB.Enabled then
+      btnUDB.Enabled := false;
     exit;
   end;
 
-  if not btnUDB.Enabled then  btnUDB.Enabled := true;
+  if not btnUDB.Enabled then
+    btnUDB.Enabled := true;
 
 end;
 
@@ -556,7 +568,8 @@ begin
   begin
     if (FDBVersion = fSelectedBuildConfig.VersionIN) AND
       (FDBMajor = fSelectedBuildConfig.MajorIN) AND
-      (FDBMinor = fSelectedBuildConfig.MinorIN) then fIsSynced := true;
+      (FDBMinor = fSelectedBuildConfig.MinorIN) then
+      fIsSynced := true;
   end;
 end;
 
@@ -572,7 +585,7 @@ begin
   Result := true;
   CmdLine := '"' + FileName + '" ' + Params;
   if Folder = '' then
-      Folder := ExcludeTrailingPathDelimiter(ExtractFilePath(FileName));
+    Folder := ExcludeTrailingPathDelimiter(ExtractFilePath(FileName));
   ZeroMemory(@StartupInfo, SizeOf(StartupInfo));
   StartupInfo.cb := SizeOf(StartupInfo);
   if RunMinimized then
@@ -580,8 +593,10 @@ begin
     StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
     StartupInfo.wShowWindow := SW_SHOWMINIMIZED;
   end;
-  if Folder <> '' then WorkingDirP := PChar(Folder)
-  else WorkingDirP := nil;
+  if Folder <> '' then
+    WorkingDirP := PChar(Folder)
+  else
+    WorkingDirP := nil;
   if not CreateProcess(nil, PChar(CmdLine), nil, nil, false, 0, nil,
     WorkingDirP, StartupInfo, ProcessInfo) then
   begin
@@ -592,10 +607,12 @@ begin
   with ProcessInfo do
   begin
     CloseHandle(hThread); // CHECK - CLOSE HERE? or move line down?
-    if WaitUntilIdle then WaitForInputIdle(hProcess, INFINITE);
+    if WaitUntilIdle then
+      WaitForInputIdle(hProcess, INFINITE);
     // CHECK ::WaitUntilTerminated was used in C++ sqlcmd.exe
     if WaitUntilTerminated then
-      repeat Application.ProcessMessages;
+      repeat
+        Application.ProcessMessages;
       until MsgWaitForMultipleObjects(1, hProcess, false, INFINITE, QS_ALLINPUT)
         <> WAIT_OBJECT_0 + 1;
     CloseHandle(hProcess);
@@ -647,7 +664,8 @@ begin
     Memo1.Lines.Add('Sending log to ' + Str + sLineBreak);
 
     // clear the log file
-    if FileExists(Str) then DeleteFile(Str);
+    if FileExists(Str) then
+      DeleteFile(Str);
 
     for fp in sl do
     begin
@@ -678,8 +696,7 @@ begin
       vimgChkBoxDBOUT.Visible := true;
       Memo1.Lines.Add('ExecuteProcess completed without errors.');
       Memo1.Lines.Add
-        ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.'
-        );
+        ('You should check SCM_UpdateDataBase.log to ensure that sqlcmd.exe also reported no errors.');
 
       // Read the current database version.
       // This procedure is called
@@ -734,7 +751,8 @@ begin
   errCode := 0;
 
   // the string isn't empty
-  if SQLFile.IsEmpty then exit;
+  if SQLFile.IsEmpty then
+    exit;
 
   quotedSQLFile := AnsiQuotedStr(SQLFile, '"');
   {
@@ -750,10 +768,10 @@ begin
   Param := '-S ' + ServerName;
   if UseOSAthent then
     // using windows OS Authentication
-      Param := Param + ' -E '
+    Param := Param + ' -E '
   else
     // UserName and Password
-      Param := Param + ' -U ' + UserName + ' -P ' + Password;
+    Param := Param + ' -U ' + UserName + ' -P ' + Password;
   // input file
   Param := Param + ' -i ' + quotedSQLFile + ' ';
 
@@ -808,7 +826,8 @@ begin
     end;
   end;
 
-  if passed then Result := true; // flag success
+  if passed then
+    Result := true; // flag success
 
 end;
 
@@ -855,7 +874,6 @@ begin
   lblPatchIn.Visible := false;
   lblPatchOut.Visible := false;
 
-
 end;
 
 procedure TSCMUpdateDataBase.FormDestroy(Sender: TObject);
@@ -886,11 +904,11 @@ begin
   end;
   // * Populate the stringlist with matching filenames
   sl.Clear();
-  for fn in List do sl.Add(fn);
+  for fn in List do
+    sl.Add(fn);
 end;
 
-function TSCMUpdateDataBase.IsSyncedMessage()
-  : TModalResult;
+function TSCMUpdateDataBase.IsSyncedMessage(): TModalResult;
 var
   verStrCURR: string;
   verStrIN: string;
@@ -938,8 +956,10 @@ begin
   ASection := SectionName;
   AName := 'Server';
   SimpleLoadSettingString(ASection, AName, Server);
-  if Server.IsEmpty then edtServerName.Text := 'localHost\SQLEXPRESS'
-  else edtServerName.Text := Server;
+  if Server.IsEmpty then
+    edtServerName.Text := 'localHost\SQLEXPRESS'
+  else
+    edtServerName.Text := Server;
   AName := 'User';
   SimpleLoadSettingString(ASection, AName, User);
   edtUser.Text := User;
@@ -949,8 +969,9 @@ begin
   AName := 'OSAuthent';
   SimpleLoadSettingString(ASection, AName, AValue);
   if (Pos('y', AValue) <> 0) or (Pos('Y', AValue) <> 0) then
-      chkbUseOSAuthentication.Checked := true
-  else chkbUseOSAuthentication.Checked := false;
+    chkbUseOSAuthentication.Checked := true
+  else
+    chkbUseOSAuthentication.Checked := false;
 end;
 
 function TSCMUpdateDataBase.GetCURRVersionStr: string;
@@ -1004,8 +1025,10 @@ begin
     AName := 'Password';
     SimpleSaveSettingString(ASection, AName, edtPassword.Text);
     AName := 'OSAuthent';
-    if chkbUseOSAuthentication.Checked = true then AValue := 'Yes'
-    else AValue := 'No';
+    if chkbUseOSAuthentication.Checked = true then
+      AValue := 'Yes'
+    else
+      AValue := 'No';
     SimpleSaveSettingString(ASection, AName, AValue);
   end
 
@@ -1013,8 +1036,10 @@ end;
 
 procedure TSCMUpdateDataBase.sbtnPasswordClick(Sender: TObject);
 begin
-  if TSpeedButton(Sender).Down then edtPassword.PasswordChar := '*'
-  else edtPassword.PasswordChar := #0;
+  if TSpeedButton(Sender).Down then
+    edtPassword.PasswordChar := '*'
+  else
+    edtPassword.PasswordChar := #0;
 end;
 
 {$REGION 'SIMPLE LOAD ROUTINES FOR TEMPORY FDAC CONNECTION'}
@@ -1044,13 +1069,24 @@ var
   Value: String;
 begin
 
-  if Server.IsEmpty then exit;
+  if Server.IsEmpty then
+    exit;
 
   if not OsAuthent then
-    if User.IsEmpty then exit;
+    if User.IsEmpty then
+      exit;
 
-  if (scmConnection.Connected) then scmConnection.Connected := false;
-
+  if (scmConnection.Connected) then
+    scmConnection.Connected := false;
+  {
+    [MSSQL_SwimClubMeet]
+    Database=SwimClubMeet
+    Server=localHost\SQLEXPRESS
+    OSAuthent=Yes
+    DriverID=MSSQL
+    Encrypt=No
+    ODBCAdvanced=Encrypt=no;Trust Server Certificate =Yes;
+  }
   scmConnection.Params.Clear();
   scmConnection.Params.Add('Server=' + Server);
   scmConnection.Params.Add('DriverID=MSSQL');
@@ -1058,17 +1094,24 @@ begin
   scmConnection.Params.Add('Database=SwimClubMeet');
   scmConnection.Params.Add('User_name=' + User);
   scmConnection.Params.Add('Password=' + Password);
-  if OsAuthent then Value := 'Yes'
-  else Value := 'No';
+  if OsAuthent then
+    Value := 'Yes'
+  else
+    Value := 'No';
   scmConnection.Params.Add('OSAuthent=' + Value);
   scmConnection.Params.Add('Mars=yes');
   scmConnection.Params.Add('MetaDefSchema=dbo');
   scmConnection.Params.Add('ExtendedMetadata=False');
+  scmConnection.Params.Add('Encrypt=No');
+  scmConnection.Params.Add('ODBCAdvanced=Encrypt=no;Trust Server');
+  scmConnection.Params.Add('Certificate =Yes');
   scmConnection.Params.Add('ApplicationName=SCM_UpdateDataBase');
+
   scmConnection.Connected := true;
 
   // ON SUCCESS - Save connection details.
-  if scmConnection.Connected Then SaveConfigData;
+  if scmConnection.Connected Then
+    SaveConfigData;
 end;
 
 procedure TSCMUpdateDataBase.SimpleSaveSettingString(ASection, AName,

@@ -12780,7 +12780,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 706
     object VirtualImage1: TVirtualImage
       Left = 434
       Top = 70
@@ -13054,7 +13053,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       BevelKind = bkTile
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 706
       object Image2: TImage
         Left = 16
         Top = 12
@@ -15748,8 +15746,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 706
-    ExplicitHeight = 371
     object Memo1: TMemo
       AlignWithMargins = True
       Left = 10
@@ -15763,7 +15759,8 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Lines.Strings = (
         
           'SCM_UpdateDataBase.exe updates your SwimClubMeet database on the' +
-          ' MS SQLEXPRESS server.'
+          ' MS SQLEXPRESS '
+        'server.'
         ''
         
           'The '#39'Update DataBase'#39' and '#39'Select Update'#39' buttons will not be VI' +
@@ -15780,8 +15777,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
         '')
       ScrollBars = ssVertical
       TabOrder = 0
-      ExplicitWidth = 686
-      ExplicitHeight = 328
     end
     object progressBar: TProgressBar
       AlignWithMargins = True
@@ -15794,7 +15789,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Margins.Right = 10
       Align = alTop
       TabOrder = 1
-      ExplicitWidth = 686
     end
   end
   object Panel3: TPanel
@@ -15807,8 +15801,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     BevelKind = bkSoft
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 804
-    ExplicitWidth = 706
     object btnUDB: TButton
       Left = 312
       Top = 7
