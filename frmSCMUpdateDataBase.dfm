@@ -15758,23 +15758,27 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
       Align = alClient
       Lines.Strings = (
         
-          'SCM_UpdateDataBase.exe updates your SwimClubMeet database on the' +
-          ' MS SQLEXPRESS '
-        'server.'
+          'This application updates your SwimClubMeet database on the MS SQ' +
+          'LEXPRESS server.'
+        ''
+        'How to update your database:'
+        ''
+        '    Step 1: Connect to the database.'
+        #9
+        '    Step 2: Click Select Update to choose your update file.'
         ''
         
-          'The '#39'Update DataBase'#39' and '#39'Select Update'#39' buttons will not be VI' +
-          'SIBLE until a connection to the '
-        'DB Server is established.'
+          '    Step 3: Once connected and a file is selected, the Update Da' +
+          'tabase button will appear.'
         ''
         
-          'The '#39'Update DataBase'#39' button will not be ENABLED until an update' +
-          ' variant is selected.'
+          '    Step 4: If the selected file is incompatible with your datab' +
+          'ase version, the button will remain '
+        'disabled.'
         ''
         
-          'ALWAYS make a backup of your database before running this utilit' +
-          'y!'
-        '')
+          'Note: Play it safe, perform a full database backup before update' +
+          'ing.')
       ScrollBars = ssVertical
       TabOrder = 0
     end

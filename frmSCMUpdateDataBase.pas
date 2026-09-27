@@ -912,6 +912,7 @@ function TSCMUpdateDataBase.IsSyncedMessage(): TModalResult;
 var
   verStrCURR: string;
   verStrIN: string;
+  verStrOUT: string;
   sl: TStringList;
 begin
   Result := mrNone;
@@ -928,6 +929,7 @@ begin
     verStrCURR := GetCURRVersionStr();
     // reads object TUSBConfig after call to actnSelectExecute
     verStrIN := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvIN);
+    verStrOUT := fSelectedBuildConfig.GetVersionStr(TscmBuildVersion.bvOUT);
 
     if not fIsSynced then
     begin
@@ -935,7 +937,10 @@ begin
       sl.Add('The current version of this SwimClubMeet database is ' +
         verStrCURR + '.');
       sl.Add('The selected update''s base version is ' + verStrIN + '.');
-      sl.Add('The two must match. The update cannot be run.');
+      if (verStrCURR = verStrOUT) then
+        sl.Add('You are already updated.')
+      else
+        sl.Add('They are incompatible. The update cannot be run.');
       Memo1.Lines.Add(sl.Text);
       sl.Free;
     end;
@@ -978,7 +983,7 @@ function TSCMUpdateDataBase.GetCURRVersionStr: string;
 begin
   // Values populated after calling QueryDBVersion
   Result := IntToStr(FDBModel) + '.' + IntToStr(FDBVersion) + '.' +
-    IntToStr(FDBMajor) + '.' + IntToStr(FDBMinor) + '.';
+    IntToStr(FDBMajor) + '.' + IntToStr(FDBMinor);
 end;
 
 procedure TSCMUpdateDataBase.QueryDBVersion();
