@@ -15760,6 +15760,9 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
         
           'This application updates your SwimClubMeet database on the MS SQ' +
           'LEXPRESS server.'
+        
+          'It'#39's advised that you perform a full database backup before upda' +
+          'teing.'
         ''
         'How to update your database:'
         ''
@@ -15772,13 +15775,10 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
           'tabase button will appear.'
         ''
         
-          '    Step 4: If the selected file is incompatible with your datab' +
-          'ase version, the button will remain '
+          'Note: If the selected file is incompatible with your database ve' +
+          'rsion, the button will remain '
         'disabled.'
-        ''
-        
-          'Note: Play it safe, perform a full database backup before update' +
-          'ing.')
+        '')
       ScrollBars = ssVertical
       TabOrder = 0
     end
@@ -16708,6 +16708,6 @@ object SCMUpdateDataBase: TSCMUpdateDataBase
     Width = 34
     Height = 34
     Left = 504
-    Top = 697
+    Top = 553
   end
 end

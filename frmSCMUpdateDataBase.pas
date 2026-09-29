@@ -168,7 +168,7 @@ begin
     edtPassword.Text, chkbUseOSAuthentication.Checked);
 
   // Clear display text
-  Memo1.Clear;
+  // Memo1.Clear;
 
   if scmConnection.Connected then
   begin
@@ -220,7 +220,7 @@ begin
     Memo1.Lines.Add('Check your input settings.' + sLineBreak);
     lblDBCURR.Caption := '';
   end;
-  Memo1.Lines.Add('READY ...');
+  Memo1.Lines.Add(sLineBreak + 'READY ...');
 
   // State of the Display
   actnDisconnect.Update; // btnDisconnect Visibility
@@ -258,7 +258,7 @@ procedure TSCMUpdateDataBase.actnDisconnectExecute(Sender: TObject);
 begin
   // disconnect
   scmConnection.Close;
-  Memo1.Clear;
+  // Memo1.Clear;
   Memo1.Lines.Add('Disconnected ...' + sLineBreak);
   // REQUIRED: update button state.
   actnConnectUpdate(self);
@@ -301,7 +301,7 @@ begin
   rootDIR := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName))
     + IncludeTrailingPathDelimiter(defSubPath);
 {$IFEND}
-  Memo1.Clear;
+//  Memo1.Clear;
   // CLEAR visibility of the patch information.
   shpPatchIn.Visible := false;
   shpPatchOut.Visible := false;
@@ -370,7 +370,7 @@ begin
   // After each selection - display a warning IsSynced message, if required.
   IsSyncedMessage;
   // Memo IsSynced WARNING message, if mismatch found.
-  Memo1.Lines.Add('READY ...');
+  Memo1.Lines.Add(sLineBreak + 'READY ...');
 
   if Assigned(fSelectedBuildConfig) then
   begin
@@ -843,7 +843,7 @@ begin
   btnDisconnect.Visible := false;
   LoadConfigData;
   // Memo already populated with useful user info... indicate ready...
-  Memo1.Lines.Add('READY ...');
+  Memo1.Lines.Add(sLineBreak + 'READY ...');
   // init DB version control
   FDBVersion := 0;
   FDBMajor := 0;
