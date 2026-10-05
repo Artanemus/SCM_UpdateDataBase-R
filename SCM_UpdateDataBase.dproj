@@ -4,8 +4,8 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <MainSource>SCM_UpdateDataBase.dpr</MainSource>
@@ -138,12 +138,13 @@
             <Form>IsSyncedMsgBox</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\SCM_SHARED\dlgSelectBuild.pas">
+        <DCCReference Include="..\SCM_SHARED\utilVersion.pas"/>
+        <DCCReference Include="dlgSelectBuild.pas">
             <Form>SelectBuild</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\SCM_SHARED\scmBuildConfig.pas"/>
-        <DCCReference Include="..\SCM_SHARED\utilVersion.pas"/>
+        <DCCReference Include="uUDB_Config.pas"/>
+        <DCCReference Include="uUDB_Defines.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -174,7 +175,19 @@
             </Delphi.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="Win32\Debug\SCM_UpdateDataBase.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Debug\SCM_UpdateDataBase.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>SCM_UpdateDataBase.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win32\Debug\SCM_UpdateDataBase.rsm" Configuration="Debug" Class="DebugSymbols"/>
+                <DeployFile LocalName="Win32\Debug\SCM_UpdateDataBase.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win32">
+                        <RemoteName>SCM_UpdateDataBase.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

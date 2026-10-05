@@ -3,18 +3,22 @@ unit frmSCMUpdateDataBase;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Winapi.Windows, Winapi.Messages,
+
+  System.SysUtils, System.Variants, System.Classes, System.Actions,
+  System.Generics.Collections, System.ImageList,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls,
+  Vcl.ComCtrls, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.VirtualImage, Vcl.Buttons, Vcl.ImgList, Vcl.VirtualImageList,
+
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error, FireDAC.UI.Intf,
   FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async,
   FireDAC.Phys, FireDAC.VCLUI.Wait, Data.DB, FireDAC.Comp.Client,
   FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf, FireDAC.DApt,
-  FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef, Vcl.ComCtrls,
-  System.Actions, Vcl.ActnList, Vcl.BaseImageCollection, Vcl.ImageCollection,
-  Vcl.VirtualImage, dlgSelectBuild, scmBuildConfig,
-  System.Generics.Collections, Vcl.Buttons, System.ImageList, Vcl.ImgList,
-  Vcl.VirtualImageList;
+  FireDAC.Comp.DataSet, FireDAC.Phys.MSSQL, FireDAC.Phys.MSSQLDef,
+
+  dlgSelectBuild, uUDB_Config, uUDB_Defines;
 
 type
   TSCMUpdateDataBase = class(TForm)
@@ -41,7 +45,6 @@ type
     lblDBIN: TLabel;
     lblDBOUT: TLabel;
     lblPassword: TLabel;
-    lblPreRelease: TLabel;
     lblServerName: TLabel;
     lblUser: TLabel;
     Memo1: TMemo;
@@ -59,10 +62,6 @@ type
     vimgChkBoxDBOUT: TVirtualImage;
     VirtualImage1: TVirtualImage;
     VirtualImageList1: TVirtualImageList;
-    shpPatchIn: TShape;
-    lblPatchIn: TLabel;
-    lblPatchOut: TLabel;
-    shpPatchOut: TShape;
     procedure actnConnectExecute(Sender: TObject);
     procedure actnConnectUpdate(Sender: TObject);
     procedure actnDisconnectExecute(Sender: TObject);
@@ -90,7 +89,6 @@ type
     // ---------------------------------------------------------
     OUT_Model = 1;
     OUT_Version = 1;
-    SCMCONFIGFILENAME = 'SCMConfig.ini';
 
     // get a text string of the current database
     // version as discovered by QueryDBVersion
@@ -108,9 +106,9 @@ type
     FDBMinor: Integer;
     FDBModel: Integer;
     FDBVersion: Integer;
-    fSelectedBuildConfig: TscmBuildConfig;
+    fSelectedBuildConfig: TUDB_Config;
     // reference to selected TUDBConfig objrct
-    UDBConfigList: TObjectList<TscmBuildConfig>;
+    UDBConfigList: TObjectList<TUDB_Config>;
     fIsSynced: Boolean; // updated after calling CompareQryVsSelected
     // function CheckVersionControlText(var SQLPath: string): Boolean;
     procedure AssertIsSyncedState;
@@ -137,12 +135,6 @@ type
 
 var
   SCMUpdateDataBase: TSCMUpdateDataBase;
-
-const
-  logOutFn = '\Documents\SCM_UpdateDataBase.log';
-  SectionName = 'SCM_UpdateDataBase';
-  logOutFnTmp = '\Documents\SCM_UpdateDataBase.tmp';
-  defSubPath = 'UDB_SCRIPTS\';
 
 implementation
 
@@ -206,10 +198,7 @@ begin
     QueryDBVersion;
     // Display on left of screen the version number.
     lblDBCURR.Caption := GetCURRVersionStr;
-    Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL');
-    Memo1.Lines.Add('ALWAYS backup your database before performing an update!' +
-      sLineBreak);
-
+    Memo1.Lines.Add('Connected to SwimClubMeet on MSSQL' + sLineBreak);
     // Memo IsSynced WARNING message, if mismatch found.
     IsSyncedMessage;
 
@@ -220,7 +209,7 @@ begin
     Memo1.Lines.Add('Check your input settings.' + sLineBreak);
     lblDBCURR.Caption := '';
   end;
-  Memo1.Lines.Add(sLineBreak + 'READY ...');
+  Memo1.Lines.Add('READY ...');
 
   // State of the Display
   actnDisconnect.Update; // btnDisconnect Visibility
@@ -301,12 +290,7 @@ begin
   rootDIR := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName))
     + IncludeTrailingPathDelimiter(defSubPath);
 {$IFEND}
-//  Memo1.Clear;
-  // CLEAR visibility of the patch information.
-  shpPatchIn.Visible := false;
-  shpPatchOut.Visible := false;
-  lblPatchIn.Visible := false;
-  lblPatchOut.Visible := false;
+
 
   // DOES PATH EXISTS?
   if not System.SysUtils.DirectoryExists(rootDIR, true) then
@@ -341,54 +325,20 @@ begin
       (TscmBuildVersion.bvIN);
     lblDBOUT.Caption := fSelectedBuildConfig.GetVersionStr
       (TscmBuildVersion.bvOUT);
-    lblPreRelease.Caption := '';
     Memo1.Lines.Add('Notes on selected version :');
     Memo1.Lines.Add(fSelectedBuildConfig.Notes);
-    Memo1.Lines.Add('');
-    s := '';
-    if not fSelectedBuildConfig.IsRelease then
-      lblPreRelease.Caption := 'Pre-Release'
-    else
-      lblPreRelease.Caption := 'Release';
-
-    if fSelectedBuildConfig.IsPatch then
-    begin
-      s := 'Patch ' + IntToStr(fSelectedBuildConfig.PatchIn);
-      if length(lblPreRelease.Caption) > 0 then
-        s := ' ' + s;
-      lblPreRelease.Caption := lblPreRelease.Caption + s;
-    end;
-
+   // Memo1.Lines.Add('');
   end
   else
   begin
     lblDBIN.Caption := '';
     lblDBOUT.Caption := '';
-    lblPreRelease.Caption := '';
   end;
 
   // After each selection - display a warning IsSynced message, if required.
   IsSyncedMessage;
   // Memo IsSynced WARNING message, if mismatch found.
-  Memo1.Lines.Add(sLineBreak + 'READY ...');
-
-  if Assigned(fSelectedBuildConfig) then
-  begin
-    if fSelectedBuildConfig.IsPatch then
-    begin
-      // INIT visibility of the patch information.
-      if (fSelectedBuildConfig.PatchIn > 0) then
-      begin
-        shpPatchIn.Visible := true;
-        lblPatchIn.Visible := true;
-      end;
-      if (fSelectedBuildConfig.PatchOut > 0) then
-      begin
-        shpPatchOut.Visible := true;
-        lblPatchOut.Visible := true;
-      end;
-    end;
-  end;
+  Memo1.Lines.Add('READY ...');
 
 end;
 
@@ -425,15 +375,11 @@ begin
 
     lblDBIN.Visible := true;
     lblDBOUT.Visible := true;
-    // if fSelectedUDBConfig.IsRelease then lblPreRelease.Visible := false;
-    // if not fSelectedUDBConfig.IsPatch then lblPatch.Visible := false;
   end
   else
   begin
     lblDBIN.Visible := false;
     lblDBOUT.Visible := false;
-    // lblPreRelease.Visible := false;
-    // lblPatch.Visible := false;
     vimgChkBoxDBIN.Visible := false;
   end;
 
@@ -843,7 +789,7 @@ begin
   btnDisconnect.Visible := false;
   LoadConfigData;
   // Memo already populated with useful user info... indicate ready...
-  Memo1.Lines.Add(sLineBreak + 'READY ...');
+  Memo1.Lines.Add('READY ...');
   // init DB version control
   FDBVersion := 0;
   FDBMajor := 0;
@@ -855,8 +801,6 @@ begin
   lblDBCURR.Caption := '';
   lblDBCURR.Visible := false;
   fIsSynced := false;
-  // init after SelectUpdate.Execute
-  lblPreRelease.Caption := '';
 
   // hide password entry.
   sbtnPassword.Down := true;
@@ -866,13 +810,14 @@ begin
   // Object includes the SQL folder path
   fSelectedBuildConfig := nil;
   // A custom collection. Contains TUDBConfig objects
-  UDBConfigList := TObjectList<TscmBuildConfig>.Create(true); // owns object
+  UDBConfigList := TObjectList<TUDB_Config>.Create(true); // owns object
 
-  // INIT visibility of the patch information.
-  shpPatchIn.Visible := false;
-  shpPatchOut.Visible := false;
-  lblPatchIn.Visible := false;
-  lblPatchOut.Visible := false;
+  SendMessage(
+    Memo1.Handle,
+    EM_SETTABSTOPS,
+    1,
+    LPARAM(@MemoTabWidth)
+  );
 
 end;
 
